@@ -12,29 +12,20 @@
 "use strict";  // Operate in Strict mode such that variables must be declared before used!
 
 function MazeLevel() {
-    this.kTargetTexture = "assets/RigidShape/target.png";
-    this.kIce = "assets/RigidShape/Ice.png";
-    this.kWood = "assets/RigidShape/Wood.png";
-    this.kDirt = "assets/RigidShape/Dirt.png";
-    this.kMud = "assets/RigidShape/Mud.png";
-    this.kRock = "assets/RigidShape/Rock.png";
-    this.kBouncy = "assets/RigidShape/Ball.png";
-    this.kBall = "assets/RigidShape/SoccerBall.png";
-    this.kWoodBall = "assets/RigidShape/WoodBall.png";
-    this.kParticleTexture = "assets/RigidShape/DirtParticle.png";
-    this.kBowlingBall = "assets/RigidShape/BowlingBall.png";
-    this.kUIButton = "assets/UI/button.png";
-    
     this.kSpriteSheet = "assets/balloonsprites.png";
+    this.kMazeWalls = "assets/maze.png";
     
     // The camera to view the scene
-    this.mCamera = null;
+    this.mLeftCamera = null;
+    this.mRightCamera = null;
+    this.mMapCamera = null;
     
-    this.mArenaStatus = null;
+    this.mLeftBalloon = null;
+    this.mRightBalloon = null;
+    
     this.mLabels = null;
     
     this.world = null;
-    this.backButton = null;
     
     this.mCurrentObj = 0;
     this.mTarget = null;
@@ -43,110 +34,71 @@ gEngine.Core.inheritPrototype(MazeLevel, Scene);
 
 
 MazeLevel.prototype.loadScene = function () {
-    gEngine.Textures.loadTexture(this.kTargetTexture);
-    gEngine.Textures.loadTexture(this.kWood);
-    gEngine.Textures.loadTexture(this.kDirt);
-    gEngine.Textures.loadTexture(this.kIce);
-    gEngine.Textures.loadTexture(this.kMud);
-    gEngine.Textures.loadTexture(this.kRock);
-    gEngine.Textures.loadTexture(this.kBouncy);
-    gEngine.Textures.loadTexture(this.kBall);
-    gEngine.Textures.loadTexture(this.kWoodBall);
-    gEngine.Textures.loadTexture(this.kParticleTexture);
-    gEngine.Textures.loadTexture(this.kBowlingBall);
-    gEngine.Textures.loadTexture(this.kUIButton);
     gEngine.Textures.loadTexture(this.kSpriteSheet);
-    document.getElementById("physics").style.display="block";
+    gEngine.Textures.loadTexture(this.kMazeWalls);
 };
 
 MazeLevel.prototype.unloadScene = function () {
-    gEngine.Textures.unloadTexture(this.kTargetTexture);
-    gEngine.Textures.unloadTexture(this.kWood);
-    gEngine.Textures.unloadTexture(this.kDirt);
-    gEngine.Textures.unloadTexture(this.kIce);
-    gEngine.Textures.unloadTexture(this.kMud);
-    gEngine.Textures.unloadTexture(this.kRock);
-    gEngine.Textures.unloadTexture(this.kBouncy);
-    gEngine.Textures.unloadTexture(this.kBall);
-    gEngine.Textures.unloadTexture(this.kWoodBall);
-    gEngine.Textures.unloadTexture(this.kBowlingBall);
-    gEngine.Textures.unloadTexture(this.kUIButton);
     gEngine.Textures.unloadTexture(this.kSpriteSheet);
-    document.getElementById("physics").style.display="none";
+    gEngine.Textures.loadTexture(this.kMazeWalls);
     gEngine.Core.startScene(new MyGame());
 };
 
 MazeLevel.prototype.initialize = function () {
     // Step A: set up the cameras
-    this.mCamera = new Camera(
+    this.mLeftCamera = new Camera(
         vec2.fromValues(50, 40), // position of the camera
-        100,                     // width of camera
-        [0, 0, 800, 600]         // viewport (orgX, orgY, width, height)
+        50,                     // width of camera
+        [0, 0, 400, 600]         // viewport (orgX, orgY, width, height)
     );
-    this.mCamera.setBackgroundColor([0.8, 0.8, 0.8, 1]);
-            // sets the background to gray
+    this.mLeftCamera.setBackgroundColor([1, 0.8, 0.8, 1]);
+    
+    this.mRightCamera = new Camera(
+        vec2.fromValues(50, 40), // position of the camera
+        50,                     // width of camera
+        [400, 0, 400, 600]         // viewport (orgX, orgY, width, height)
+    );
+    this.mRightCamera.setBackgroundColor([0.8, 1, 0.8, 1]);
+    
+    this.mMapCamera = new Camera(
+        vec2.fromValues(0, 0), // position of the camera
+        150,                     // width of camera
+        [150, 50, 450, 500]         // viewport (orgX, orgY, width, height)
+    );
+    this.mMapCamera.setBackgroundColor([0.8, 0.8, 1, 1]);
+    
+    // sets the background to gray
     gEngine.DefaultResources.setGlobalAmbientIntensity(3);
     this.world = new GameObjectSet();
     var m;
-    m = new Arena(-1.5,0,47,47*.75,.6,.01,1,2,this.kIce,false); 
-    this.world.addToSet(m);
-    m = new Arena(48.5,38.5,47,47*.75,.01,.1,0,5,this.kMud,true); 
-    this.world.addToSet(m);
-    m = new Arena(-1.5,38.5,47,47*.75,.8,.5,0,2,this.kWood,false); 
-    this.world.addToSet(m);
-    m = new Arena(48.5,0,47,47*.75,.3,.7,3,4,this.kDirt,false); 
+    m = new Maze(this.kMazeWalls, 0,0,100,100,.3,.7,false); 
     this.world.addToSet(m);
     
-    var b = new Balloon(this.kSpriteSheet, 75, 20);
-    b.getRenderable().setColor([1,0,0,0.5]);
-    b.setUpVector(this.mCamera.getUpVector());
-    m.mShapes.addToSet(b);
-    b = new Balloon(this.kSpriteSheet, 70, 20);
-    b.setUpVector(this.mCamera.getUpVector());
-    b.getRenderable().setColor([0,1,0,0.5]);
-    m.mShapes.addToSet(b);
+    this.mLeftBalloon = new Balloon(this.kSpriteSheet, -30, -40);
+    this.mLeftBalloon.getRenderable().setColor([1,0,0,0.5]);
+    this.mLeftBalloon.setUpVector(this.mLeftCamera.getUpVector());
+    m.mShapes.addToSet(this.mLeftBalloon);
     
-    //this.createBounds();
-    var r = new TextureRenderable(this.kTargetTexture);
-    this.mTarget = new GameObject(r);
-    var xf = r.getXform();
-    xf.setSize(3, 3);
+    this.mRightBalloon = new Balloon(this.kSpriteSheet, 30, -40);
+    this.mRightBalloon.getRenderable().setColor([0,1,0,0.5]);
+    this.mRightBalloon.setUpVector(this.mRightCamera.getUpVector());
+    m.mShapes.addToSet(this.mRightBalloon);
     
-    this.mFirstObject = 0;
-    this.mCurrentObj = this.mFirstObject;
-    
-    this.mLabels=new GameObjectSet();
-    var m;
-    m = new FontRenderable("Ice");
-    m.setColor([1, 1, 1, 1]);
-    m.getXform().setPosition(20, 39);
-    m.setTextHeight(2.5);
+    this.mLabels = new GameObjectSet();
+};
+
+MazeLevel.prototype.addLabel = function(text, color, x, y, h) {
+    var m = new FontRenderable(text);
+    m.setColor(color);
+    m.getXform().setPosition(x, y);
+    m.setTextHeight(h);
     this.mLabels.addToSet(m);
-    
-    m = new FontRenderable("Wood");
-    m.setColor([1, 1, 1, 1]);
-    m.getXform().setPosition(20, 77);
-    m.setTextHeight(2.5);
-    this.mLabels.addToSet(m);
-    
-    m = new FontRenderable("Dirt");
-    m.setColor([1, 1, 1, 1]);
-    m.getXform().setPosition(70, 39);
-    m.setTextHeight(2.5);
-    this.mLabels.addToSet(m);
-    
-    m = new FontRenderable("Mud");
-    m.setColor([1, 1, 1, 1]);
-    m.getXform().setPosition(70, 77);
-    m.setTextHeight(2.5);
-    this.mLabels.addToSet(m);
-    
-    this.mArenaStatus = new FontRenderable("");
-    this.mArenaStatus.setColor([0, 0, 0, 1]);
-    this.mArenaStatus.getXform().setPosition(5, 42);
-    this.mArenaStatus.setTextHeight(2.5);
-    
-    this.backButton = new UIButton(this.kUIButton,this.backSelect,this,[400,580],[160,40],"Go Back",4,[1,1,1,1],[1,1,1,1]);
+};
+
+MazeLevel.prototype.drawView = function(aCamera) {
+    aCamera.setupViewProjection();
+    this.world.draw(aCamera);
+    this.mLabels.draw(aCamera);
 };
 
 // This is the draw function, make sure to setup proper drawing environment, and more
@@ -155,98 +107,36 @@ MazeLevel.prototype.draw = function () {
     // Step A: clear the canvas
     gEngine.Core.clearCanvas([0.9, 0.9, 0.9, 1.0]); // clear to light gray
     
-    this.mCamera.setRotation(this.mCamera.getRotation() + 0.01);
-    this.mCamera.setupViewProjection();
+    this.drawView(this.mLeftCamera);
+    this.drawView(this.mRightCamera);
     
-    //this.mAllObjs.draw(this.mCamera);
-    
-    // for now draw these ...
-    /*for (var i = 0; i<this.mCollisionInfos.length; i++) 
-        this.mCollisionInfos[i].draw(this.mCamera); */
-    this.mCollisionInfos = []; 
-    
-    this.world.draw(this.mCamera);
-    this.mTarget.draw(this.mCamera);
-    this.mArenaStatus.draw(this.mCamera);
-    this.mLabels.draw(this.mCamera);
-    this.backButton.draw(this.mCamera);
+    if (gEngine.Input.isKeyPressed(gEngine.Input.keys.M))
+        this.drawView(this.mMapCamera);
 };
 
 // The Update function, updates the application state. Make sure to _NOT_ draw
 // anything from this function!
 MazeLevel.kBoundDelta = 0.1;
 MazeLevel.prototype.update = function () {
+    var camAngle = this.mLeftCamera.getRotation();
+    
     var area = this.world.getObjectAt(this.mCurrentObj);
     var pos = area.getPos();
     
     if (gEngine.Input.isKeyClicked(gEngine.Input.keys.Left)) {
-        area.cycleFoward();
+        camAngle += Math.PI / 4;
     }
     if (gEngine.Input.isKeyClicked(gEngine.Input.keys.Right)) {
-        area.cycleBackward();
+        camAngle -= Math.PI / 4;
     }
     
-    if (gEngine.Input.isKeyPressed(gEngine.Input.keys.C)) {
-        area.incRestitution(-.01);
-    }
-    if (gEngine.Input.isKeyPressed(gEngine.Input.keys.V)) {
-        area.incRestitution(.01);
-    }
-    if (gEngine.Input.isKeyPressed(gEngine.Input.keys.B)) {
-        area.incFriction(-.01);
-    }
-    if (gEngine.Input.isKeyPressed(gEngine.Input.keys.N)) {
-        area.incFriction(.01);
-    }
-    if (gEngine.Input.isKeyClicked(gEngine.Input.keys.H)) {
-        area.radomizeVelocity();
-    }
-    
-    if (gEngine.Input.isKeyClicked(gEngine.Input.keys.U)) {
-        area.createBouncy(pos[0]+15,pos[1]+20,2);
-    }
-    if (gEngine.Input.isKeyClicked(gEngine.Input.keys.J)) {
-        area.createBall(pos[0]+15,pos[1]+20,4);
-    }
-    if (gEngine.Input.isKeyClicked(gEngine.Input.keys.I)) {
-        area.createRock(pos[0]+15,pos[1]+20,5);
-    }
-    
-    if (gEngine.Input.isKeyClicked(gEngine.Input.keys.K)) {
-        area.createWood(pos[0]+15,pos[1]+20,4);
-    }
-    if (gEngine.Input.isKeyClicked(gEngine.Input.keys.O)) {
-        area.createIce(pos[0]+15,pos[1]+20,5);
-    }
-    
-    if (gEngine.Input.isKeyClicked(gEngine.Input.keys.L)) {
-        area.createBowlingBall(pos[0]+15,pos[1]+20,3);
-    }
-    
-    if (gEngine.Input.isKeyClicked(gEngine.Input.keys.Z)) {
-        area.lightOff();
-        this.mCurrentObj -= 1;
-        if (this.mCurrentObj < this.mFirstObject)
-            this.mCurrentObj = this.world.size() - 1;
-    }            
-    if (gEngine.Input.isKeyClicked(gEngine.Input.keys.X)) {
-        area.lightOff();
-        this.mCurrentObj += 1;
-        if (this.mCurrentObj >= this.world.size())
-            this.mCurrentObj = this.mFirstObject;
-    }
-    this.world.getObjectAt(this.mCurrentObj).lightOn();
     this.world.update();
-    var obj = area.getObject();
-    area.physicsReport();
-    obj.keyControl();
-
-    var p = obj.getXform().getPosition();
-    this.mTarget.getXform().setPosition(p[0], p[1]);
-    this.backButton.update();
-    this.mArenaStatus.setText(area.getCurrentState());
-};
-
-MazeLevel.prototype.backSelect = function(){
-    gEngine.GameLoop.stop();
+    
+    this.mLeftCamera.setRotation(camAngle);
+    this.mLeftCamera.getWCCenter()[0] = this.mLeftBalloon.getXform().getXPos();
+    this.mLeftCamera.getWCCenter()[1] = this.mLeftBalloon.getXform().getYPos();
+    this.mRightCamera.setRotation(camAngle);
+    this.mRightCamera.getWCCenter()[0] = this.mRightBalloon.getXform().getXPos();
+    this.mRightCamera.getWCCenter()[1] = this.mRightBalloon.getXform().getYPos();
+    this.mMapCamera.setRotation(camAngle);
 };

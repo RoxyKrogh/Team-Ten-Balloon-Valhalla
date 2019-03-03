@@ -15,8 +15,8 @@
  */
 Camera.prototype.setRotation = function (radians) {
     this.mRotation = radians;
-    this.mUpVector[0] = Math.cos(radians);
-    this.mUpVector[1] = Math.sin(radians);
+    this.mUpVector[0] = -Math.sin(radians);
+    this.mUpVector[1] = Math.cos(radians);
     this.mUpVector[2] = 0.0;
 };
 

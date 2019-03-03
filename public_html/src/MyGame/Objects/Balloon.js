@@ -53,6 +53,6 @@ Balloon.prototype.update = function (aCamera) {
     this.getRigidBody().mAcceleration = v;
     var p = [0,0];
     vec2.add(p, v, this.getXform().getPosition());
-    this.rotateObjPointTo(p, 0.1);
+    this.rotateObjPointTo(p, 0.03);
     GameObject.prototype.update.call(this);
 };
