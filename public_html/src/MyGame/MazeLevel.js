@@ -29,6 +29,9 @@ function MazeLevel() {
     
     this.mCurrentObj = 0;
     this.mTarget = null;
+    
+    this.mTargetAngle = 0;
+    this.mSmoothAngle = null;
 }
 gEngine.Core.inheritPrototype(MazeLevel, Scene);
 
@@ -45,6 +48,7 @@ MazeLevel.prototype.unloadScene = function () {
 };
 
 MazeLevel.prototype.initialize = function () {
+    
     // Step A: set up the cameras
     this.mLeftCamera = new Camera(
         vec2.fromValues(50, 40), // position of the camera
@@ -66,6 +70,8 @@ MazeLevel.prototype.initialize = function () {
         [150, 50, 450, 500]         // viewport (orgX, orgY, width, height)
     );
     this.mMapCamera.setBackgroundColor([0.8, 0.8, 1, 1]);
+    
+    this.mSmoothAngle = new Interpolate(0, 60, 0.1);
     
     // sets the background to gray
     gEngine.DefaultResources.setGlobalAmbientIntensity(3);
@@ -124,19 +130,25 @@ MazeLevel.prototype.update = function () {
     var pos = area.getPos();
     
     if (gEngine.Input.isKeyClicked(gEngine.Input.keys.Left)) {
-        camAngle += Math.PI / 4;
+        this.mTargetAngle += Math.PI / 4;
+        this.mSmoothAngle.setFinalValue(this.mTargetAngle);
     }
     if (gEngine.Input.isKeyClicked(gEngine.Input.keys.Right)) {
-        camAngle -= Math.PI / 4;
+        this.mTargetAngle -= Math.PI / 4;
+        this.mSmoothAngle.setFinalValue(this.mTargetAngle);
     }
     
+    this.mSmoothAngle.updateInterpolation();
     this.world.update();
     
-    this.mLeftCamera.setRotation(camAngle);
+    
+    console.log(this.mTargetAngle, this.mGravityAngle)
+    
+    this.mLeftCamera.setRotation(this.mSmoothAngle.getValue());
     this.mLeftCamera.getWCCenter()[0] = this.mLeftBalloon.getXform().getXPos();
     this.mLeftCamera.getWCCenter()[1] = this.mLeftBalloon.getXform().getYPos();
-    this.mRightCamera.setRotation(camAngle);
+    this.mRightCamera.setRotation(this.mSmoothAngle.getValue());
     this.mRightCamera.getWCCenter()[0] = this.mRightBalloon.getXform().getXPos();
     this.mRightCamera.getWCCenter()[1] = this.mRightBalloon.getXform().getYPos();
-    this.mMapCamera.setRotation(camAngle);
+    this.mMapCamera.setRotation(this.mSmoothAngle.getValue());
 };
