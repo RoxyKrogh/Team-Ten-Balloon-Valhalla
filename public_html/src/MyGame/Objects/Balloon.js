@@ -30,10 +30,6 @@ function Balloon(spriteTexture, atX, atY) {
     GameObject.call(this, this.mBalloon);
     
     var r = new RigidCircle(this.getXform(), 0.35*Math.sqrt(w*w + h*h)); 
-    var vx = (Math.random() - 0.5);
-    var vy = (Math.random() - 0.5);
-    var speed = 20 + Math.random() * 10;
-    r.setVelocity(vx * speed, vy * speed);
     this.setRigidBody(r);
     r.setRestitution(3.0);
     r.setFriction(.6);

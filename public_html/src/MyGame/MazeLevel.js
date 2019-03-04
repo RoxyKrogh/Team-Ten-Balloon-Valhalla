@@ -14,9 +14,11 @@
 function MazeLevel() {
     this.kBalloonTex = "assets/balloon_lres.png";
     this.kSpikeTex = "assets/spike_lres.png";
+    this.kGateTex = "assets/gate.png";
+    this.kKeyTex = "assets/key.png";
     this.kMazeWalls = "assets/maze.png";
     
-    this.kWinHeight = 80; // height balloons must reach to win
+    this.kWinHeight = 90; // height balloons must reach to win
     
     // The camera to view the scene
     this.mLeftCamera = null;
@@ -42,12 +44,16 @@ MazeLevel.prototype.loadScene = function () {
     gEngine.Textures.loadTexture(this.kBalloonTex);
     gEngine.Textures.loadTexture(this.kSpikeTex);
     gEngine.Textures.loadTexture(this.kMazeWalls);
+    gEngine.Textures.loadTexture(this.kGateTex);
+    gEngine.Textures.loadTexture(this.kKeyTex);
 };
 
 MazeLevel.prototype.unloadScene = function () {
-    gEngine.Textures.loadTexture(this.kBalloonTex);
-    gEngine.Textures.loadTexture(this.kSpikeTex);
-    gEngine.Textures.loadTexture(this.kMazeWalls);
+    gEngine.Textures.unloadTexture(this.kBalloonTex);
+    gEngine.Textures.unloadTexture(this.kSpikeTex);
+    gEngine.Textures.unloadTexture(this.kMazeWalls);
+    gEngine.Textures.unloadTexture(this.kGateTex);
+    gEngine.Textures.unloadTexture(this.kKeyTex);
     
     if (this.mNextState === "Win") {
         alert("You win!");
@@ -86,7 +92,7 @@ MazeLevel.prototype.initialize = function () {
     
     // sets the background to gray
     gEngine.DefaultResources.setGlobalAmbientIntensity(3);
-    this.world = new Maze(this.kMazeWalls, this.kSpikeTex, 0,0,100,100,.3,.7,false); 
+    this.world = new Maze(this.kMazeWalls, this.kSpikeTex, this.kGateTex, this.kKeyTex, 0,0,100,100,.3,.7,false); 
     
     this.mLeftBalloon = new Balloon(this.kBalloonTex, -30, -40);
     this.mLeftBalloon.getRenderable().setColor([1,0,0,0.5]);
@@ -173,9 +179,13 @@ MazeLevel.prototype.update = function () {
     if (this.world.testHazards(this.mRightBalloon, wcCoord))
         this.popBalloon(this.mRightBalloon);
     
-    // Move cameras
-    this.updateCameras();
+    this.world.bumpIntoGates(this.mLeftBalloon);
+    this.world.bumpIntoGates(this.mRightBalloon);
     
+    this.world.pickupKeys(this.mLeftBalloon);
+    this.world.pickupKeys(this.mRightBalloon);
+    
+    // Test balloon heights for win condition
     var up = this.mLeftCamera.getUpVector();
     var offset = [0,0];
     vec2.subtract(offset, this.mLeftBalloon.getXform().getPosition(), this.world.pos);
@@ -184,4 +194,7 @@ MazeLevel.prototype.update = function () {
     var rightHeight = vec2.dot(offset, up);
     if (leftHeight > this.kWinHeight && rightHeight > this.kWinHeight)
         this.win();
+    
+    // Move cameras
+    this.updateCameras();
 };

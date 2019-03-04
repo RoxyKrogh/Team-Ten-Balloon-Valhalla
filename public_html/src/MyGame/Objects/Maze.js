@@ -9,7 +9,7 @@
 /* find out more about jslint: http://www.jslint.com/help.html */
 
 "use strict";
-function Maze(texture, hazardTex, x, y, w, h, res, frct, p) {
+function Maze(texture, hazardTex, gateTex, keyTex, x, y, w, h, res, frct, p) {
     
     this.mMazeTexture = new TextureRenderable(texture);
     this.mMazeTexture.getXform().setPosition(x, y);
@@ -17,8 +17,10 @@ function Maze(texture, hazardTex, x, y, w, h, res, frct, p) {
 
     this.mShapes = new GameObjectSet();
     this.mHazards = new GameObjectSet();
+    this.mGates = new GameObjectSet();
+    this.mKeys = new GameObjectSet();
     this.mPset = new ParticleGameObjectSet();
-    this.createBounds(hazardTex, x, y, w, h, res, frct);
+    this.createBounds(hazardTex, gateTex, keyTex, x, y, w, h, res, frct);
     this.rep = p;
     this.pos = [x, y];
 }
@@ -26,6 +28,7 @@ function Maze(texture, hazardTex, x, y, w, h, res, frct, p) {
 Maze.prototype.draw = function (aCamera) {
     this.mShapes.draw(aCamera);
     this.mHazards.draw(aCamera);
+    this.mKeys.draw(aCamera);
     this.mMazeTexture.draw(aCamera);
     if (this.rep === true) {
         this.mPset.draw(aCamera);
@@ -35,6 +38,7 @@ Maze.prototype.draw = function (aCamera) {
 Maze.prototype.update = function () {
     this.mShapes.update();
     this.mHazards.update();
+    this.mKeys.update();
     if (this.rep === true) {
         this.mPset.update();
         this.particleCollision();
@@ -45,13 +49,33 @@ Maze.prototype.update = function () {
 Maze.prototype.testHazards = function (gameobj, wcCoord) {
     var i;
     for (i = 0; i < this.mHazards.mSet.length; i++) {
-        if (gameobj.getBBox().intersectsBound(this.mHazards.mSet[i].getBBox()) && gameobj.pixelTouches(this.mHazards.mSet[i], wcCoord))
+        if (gameobj.pixelTouches(this.mHazards.mSet[i], wcCoord))
             return true;
     }
     return false;
 };
 
-Maze.prototype.createBounds = function (hazardTex, x, y, w, h, res, frct, art) {
+Maze.prototype.bumpIntoGates = function (gameobj) {
+    var i;
+    var wcCoord = [];
+    for (i = 0; i < this.mGates.mSet.length; i++) {
+        if (gameobj.pixelTouches(this.mGates.mSet[i], wcCoord))
+            this.mGates.mSet[i].open();
+    }
+};
+
+Maze.prototype.pickupKeys = function (gameobj) {
+    var i;
+    var wcCoord = [];
+    for (i = 0; i < this.mKeys.mSet.length; i++) {
+        if (gameobj.pixelTouches(this.mKeys.mSet[i], wcCoord)) {
+            this.mKeys.mSet[i].pickup();
+            this.mKeys.mSet.splice(i--, 1);
+        }
+    }
+};
+
+Maze.prototype.createBounds = function (hazardTex, gateTex, keyTex, x, y, w, h, res, frct, art) {
 
     var tx = x - w/2;
     var ty = y + h/2;
@@ -71,6 +95,22 @@ Maze.prototype.createBounds = function (hazardTex, x, y, w, h, res, frct, art) {
                               ty - ((y + 0.5) * ps * sy), 
                               direction);
         maze.mHazards.addToSet(spike);
+    }
+    function gateAtPixel(maze, x, y, direction) {
+        var gate = new Gate(gateTex,
+                              tx + ((x + 0.5) * ps * sx), 
+                              ty - ((y + 0.5) * ps * sy), 
+                              direction);
+        maze.mShapes.addToSet(gate);
+        maze.mGates.addToSet(gate);
+        return gate;
+    }
+    function keyAtPixel(maze, x, y, gate) {
+        var key = new Key(keyTex,
+                              tx + ((x + 0.5) * ps * sx), 
+                              ty - ((y + 0.5) * ps * sy), 
+                              gate);
+        maze.mKeys.addToSet(key);
     }
     
     wallAtPixels(this, 0,   1,  14, 4);
@@ -101,6 +141,12 @@ Maze.prototype.createBounds = function (hazardTex, x, y, w, h, res, frct, art) {
     
     spikeAtPixel(this, 10, 6, 0);
     spikeAtPixel(this, 20, 6, 0);
+    
+    var gate = gateAtPixel(this, 15, 3, 0);
+    keyAtPixel(this, 4, 5, gate);
+    
+    gate = gateAtPixel(this, 22, 11, 0);
+    keyAtPixel(this, 16, 10, gate);
 };
 
 Maze.prototype.lightOn = function () {
