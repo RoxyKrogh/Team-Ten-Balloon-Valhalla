@@ -65,7 +65,6 @@ MyGame.prototype.draw = function () {
     // Step A: clear the canvas
     gEngine.Core.clearCanvas([0.9, 0.9, 0.9, 1.0]); // clear to light gray
     
-    
     this.mCamera.setupViewProjection();
     this.ParticleButton.draw(this.mCamera);
     this.PhysicsButton.draw(this.mCamera);

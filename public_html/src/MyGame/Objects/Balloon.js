@@ -21,11 +21,11 @@ function Balloon(spriteTexture, atX, atY) {
     
     this.mUpVec = [0, 1];
     
-    this.mBalloon = new SpriteRenderable(spriteTexture);
+    this.mBalloon = new TextureRenderable(spriteTexture);
     this.mBalloon.setColor([1,1,1,0.5]);
     this.mBalloon.getXform().setPosition(atX, atY);
     this.mBalloon.getXform().setSize(w, h);
-    this.mBalloon.setElementPixelPositions(548, 795, 450, 704);
+    //this.mBalloon.setElementPixelPositions(548, 795, 450, 704);
 
     GameObject.call(this, this.mBalloon);
     

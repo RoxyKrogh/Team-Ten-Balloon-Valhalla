@@ -12,8 +12,11 @@
 "use strict";  // Operate in Strict mode such that variables must be declared before used!
 
 function MazeLevel() {
-    this.kSpriteSheet = "assets/balloonsprites.png";
+    this.kBalloonTex = "assets/balloon_lres.png";
+    this.kSpikeTex = "assets/spike_lres.png";
     this.kMazeWalls = "assets/maze.png";
+    
+    this.kWinHeight = 80; // height balloons must reach to win
     
     // The camera to view the scene
     this.mLeftCamera = null;
@@ -27,24 +30,32 @@ function MazeLevel() {
     
     this.world = null;
     
-    this.mCurrentObj = 0;
-    this.mTarget = null;
-    
     this.mTargetAngle = 0;
     this.mSmoothAngle = null;
+    
+    this.mNextState = "Lose";
 }
 gEngine.Core.inheritPrototype(MazeLevel, Scene);
 
 
 MazeLevel.prototype.loadScene = function () {
-    gEngine.Textures.loadTexture(this.kSpriteSheet);
+    gEngine.Textures.loadTexture(this.kBalloonTex);
+    gEngine.Textures.loadTexture(this.kSpikeTex);
     gEngine.Textures.loadTexture(this.kMazeWalls);
 };
 
 MazeLevel.prototype.unloadScene = function () {
-    gEngine.Textures.unloadTexture(this.kSpriteSheet);
+    gEngine.Textures.loadTexture(this.kBalloonTex);
+    gEngine.Textures.loadTexture(this.kSpikeTex);
     gEngine.Textures.loadTexture(this.kMazeWalls);
-    gEngine.Core.startScene(new MyGame());
+    
+    if (this.mNextState === "Win") {
+        alert("You win!");
+    }
+    if (this.mNextState === "Lose") {
+        alert("Balloon has popped!");
+    }
+    gEngine.Core.startScene(new MazeLevel());
 };
 
 MazeLevel.prototype.initialize = function () {
@@ -75,20 +86,17 @@ MazeLevel.prototype.initialize = function () {
     
     // sets the background to gray
     gEngine.DefaultResources.setGlobalAmbientIntensity(3);
-    this.world = new GameObjectSet();
-    var m;
-    m = new Maze(this.kMazeWalls, 0,0,100,100,.3,.7,false); 
-    this.world.addToSet(m);
+    this.world = new Maze(this.kMazeWalls, this.kSpikeTex, 0,0,100,100,.3,.7,false); 
     
-    this.mLeftBalloon = new Balloon(this.kSpriteSheet, -30, -40);
+    this.mLeftBalloon = new Balloon(this.kBalloonTex, -30, -40);
     this.mLeftBalloon.getRenderable().setColor([1,0,0,0.5]);
     this.mLeftBalloon.setUpVector(this.mLeftCamera.getUpVector());
-    m.mShapes.addToSet(this.mLeftBalloon);
+    this.world.mShapes.addToSet(this.mLeftBalloon);
     
-    this.mRightBalloon = new Balloon(this.kSpriteSheet, 30, -40);
+    this.mRightBalloon = new Balloon(this.kBalloonTex, 30, -40);
     this.mRightBalloon.getRenderable().setColor([0,1,0,0.5]);
     this.mRightBalloon.setUpVector(this.mRightCamera.getUpVector());
-    m.mShapes.addToSet(this.mRightBalloon);
+    this.world.mShapes.addToSet(this.mRightBalloon);
     
     this.mLabels = new GameObjectSet();
 };
@@ -107,28 +115,44 @@ MazeLevel.prototype.drawView = function(aCamera) {
     this.mLabels.draw(aCamera);
 };
 
-// This is the draw function, make sure to setup proper drawing environment, and more
-// importantly, make sure to _NOT_ change any state.
 MazeLevel.prototype.draw = function () {
     // Step A: clear the canvas
     gEngine.Core.clearCanvas([0.9, 0.9, 0.9, 1.0]); // clear to light gray
     
+    // Draw the left/right views
     this.drawView(this.mLeftCamera);
     this.drawView(this.mRightCamera);
     
+    // Draw the map if 'M' is pressed
     if (gEngine.Input.isKeyPressed(gEngine.Input.keys.M))
         this.drawView(this.mMapCamera);
 };
 
-// The Update function, updates the application state. Make sure to _NOT_ draw
-// anything from this function!
-MazeLevel.kBoundDelta = 0.1;
+MazeLevel.prototype.updateCameras = function () {
+    function followBalloon(cam, balloon, angle) {
+        cam.setRotation(angle);
+        cam.getWCCenter()[0] = balloon.getXform().getXPos();
+        cam.getWCCenter()[1] = balloon.getXform().getYPos();
+    }
+    var angle = this.mSmoothAngle.getValue();
+    followBalloon(this.mLeftCamera, this.mLeftBalloon, angle);
+    followBalloon(this.mRightCamera, this.mRightBalloon, angle);
+    this.mMapCamera.setRotation(angle);
+};
+
+MazeLevel.prototype.popBalloon = function (balloon) {
+    this.mNextState = "Lose";
+    gEngine.GameLoop.stop();
+};
+
+MazeLevel.prototype.win = function () {
+    this.mNextState = "Win";
+    gEngine.GameLoop.stop();
+};
+
 MazeLevel.prototype.update = function () {
-    var camAngle = this.mLeftCamera.getRotation();
     
-    var area = this.world.getObjectAt(this.mCurrentObj);
-    var pos = area.getPos();
-    
+    // Rotation controls
     if (gEngine.Input.isKeyClicked(gEngine.Input.keys.Left)) {
         this.mTargetAngle += Math.PI / 4;
         this.mSmoothAngle.setFinalValue(this.mTargetAngle);
@@ -137,18 +161,27 @@ MazeLevel.prototype.update = function () {
         this.mTargetAngle -= Math.PI / 4;
         this.mSmoothAngle.setFinalValue(this.mTargetAngle);
     }
-    
     this.mSmoothAngle.updateInterpolation();
+    
+    // Update gameobjects
     this.world.update();
     
+    // Test for collisions between balloons and spikes
+    var wcCoord = [0,0];
+    if (this.world.testHazards(this.mLeftBalloon, wcCoord))
+        this.popBalloon(this.mLeftBalloon);
+    if (this.world.testHazards(this.mRightBalloon, wcCoord))
+        this.popBalloon(this.mRightBalloon);
     
-    console.log(this.mTargetAngle, this.mGravityAngle)
+    // Move cameras
+    this.updateCameras();
     
-    this.mLeftCamera.setRotation(this.mSmoothAngle.getValue());
-    this.mLeftCamera.getWCCenter()[0] = this.mLeftBalloon.getXform().getXPos();
-    this.mLeftCamera.getWCCenter()[1] = this.mLeftBalloon.getXform().getYPos();
-    this.mRightCamera.setRotation(this.mSmoothAngle.getValue());
-    this.mRightCamera.getWCCenter()[0] = this.mRightBalloon.getXform().getXPos();
-    this.mRightCamera.getWCCenter()[1] = this.mRightBalloon.getXform().getYPos();
-    this.mMapCamera.setRotation(this.mSmoothAngle.getValue());
+    var up = this.mLeftCamera.getUpVector();
+    var offset = [0,0];
+    vec2.subtract(offset, this.mLeftBalloon.getXform().getPosition(), this.world.pos);
+    var leftHeight = vec2.dot(offset, up);
+    vec2.subtract(offset, this.mRightBalloon.getXform().getPosition(), this.world.pos);
+    var rightHeight = vec2.dot(offset, up);
+    if (leftHeight > this.kWinHeight && rightHeight > this.kWinHeight)
+        this.win();
 };
