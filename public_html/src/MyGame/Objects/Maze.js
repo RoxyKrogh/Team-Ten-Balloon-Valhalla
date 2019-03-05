@@ -9,7 +9,7 @@
 /* find out more about jslint: http://www.jslint.com/help.html */
 
 "use strict";
-function Maze(texture, hazardTex, gateTex, keyTex, x, y, w, h, res, frct, p) {
+function Maze(pixelTexture, texture, hazardTex, gateTex, keyTex, x, y, w, h, res, frct, p) {
     
     this.mMazeTexture = new TextureRenderable(texture);
     this.mMazeTexture.getXform().setPosition(x, y);
@@ -20,7 +20,7 @@ function Maze(texture, hazardTex, gateTex, keyTex, x, y, w, h, res, frct, p) {
     this.mGates = new GameObjectSet();
     this.mKeys = new GameObjectSet();
     this.mPset = new ParticleGameObjectSet();
-    this.createBounds(hazardTex, gateTex, keyTex, x, y, w, h, res, frct);
+    this.createBounds(pixelTexture, hazardTex, gateTex, keyTex, x, y, w, h, res, frct);
     this.rep = p;
     this.pos = [x, y];
 }
@@ -76,15 +76,18 @@ Maze.prototype.pickupKeys = function (gameobj) {
     }
 };
 
-Maze.prototype.createBounds = function (hazardTex, gateTex, keyTex, x, y, w, h, res, frct, art) {
+Maze.prototype.createBounds = function (pixelTexture, hazardTex, gateTex, keyTex, x, y, w, h, res, frct, art) {
 
     var tx = x - w/2;
     var ty = y + h/2;
     var sx = w / this.mMazeTexture.mTexWidth;
     var sy = h / this.mMazeTexture.mTexHeight;
-
-    // create maze walls (resolution = 32x32)
-    var ps = this.mMazeTexture.mTexWidth / 32;
+    
+    
+    var texInfo = gEngine.Textures.getTextureInfo(pixelTexture);
+    var pixelArray = gEngine.Textures.getColorArray(pixelTexture);
+    // create maze walls (resolution = texInfo.height)
+    var ps = this.mMazeTexture.mTexWidth / texInfo.mHeight;
     function wallAtPixels(maze, x1, y1, x2, y2) {
         maze.blockAt(tx + (x1 * ps * sx), ty - (y1 * ps * sy),
                 tx + (x2 * ps * sx), ty - (y2 * ps * sy),
@@ -96,6 +99,7 @@ Maze.prototype.createBounds = function (hazardTex, gateTex, keyTex, x, y, w, h, 
                               ty - ((y + 0.5) * ps * sy), 
                               direction);
         maze.mHazards.addToSet(spike);
+        return spike;
     }
     function gateAtPixel(maze, x, y, direction) {
         var gate = new Gate(gateTex,
@@ -106,48 +110,190 @@ Maze.prototype.createBounds = function (hazardTex, gateTex, keyTex, x, y, w, h, 
         maze.mGates.addToSet(gate);
         return gate;
     }
-    function keyAtPixel(maze, x, y, gate) {
+    function keyAtPixel(maze, x, y) {
         var key = new Key(keyTex,
                               tx + ((x + 0.5) * ps * sx), 
-                              ty - ((y + 0.5) * ps * sy), 
-                              gate);
+                              ty - ((y + 0.5) * ps * sy));
         maze.mKeys.addToSet(key);
+        return key;
     }
     
-    wallAtPixels(this, 0,   1,  14, 4);
-    wallAtPixels(this, 17,  1,  32, 4);
-    wallAtPixels(this, 0,   4,  3,  32);
-    wallAtPixels(this, 6,   4,  7,  14);
-    wallAtPixels(this, 10,  7,  15, 14);
-    wallAtPixels(this, 13,  14, 15, 19);
-    wallAtPixels(this, 13,  19, 18, 28);
-    wallAtPixels(this, 7,   26, 13, 31);
-    wallAtPixels(this, 13,  28, 25, 31);
-    wallAtPixels(this, 4,   31, 28, 32);
-    wallAtPixels(this, 3,   23, 4,  32);
-    wallAtPixels(this, 7,   23, 10, 26);
-    wallAtPixels(this, 3,   17, 10, 20);
-    wallAtPixels(this, 28,  4,  32, 32);
-    wallAtPixels(this, 24,  4,  28, 12);
-    wallAtPixels(this, 18,  7,  21, 16);
-    wallAtPixels(this, 21,  15, 25, 16);
-    wallAtPixels(this, 24,  16, 25, 21);
-    wallAtPixels(this, 20,  19, 21, 25);
-    wallAtPixels(this, 21,  24, 28, 25);
-    wallAtPixels(this, 15,  7,  18, 9);
+    var lx = 0, ly = 0, hx = 0, hy = 0;
+    var bounded = new Array(pixelArray.length/4);
+    var binding = false, boundW = 0;
     
-    spikeAtPixel(this, 3, 20, -1);
-    spikeAtPixel(this, 3, 21, -1);
-    spikeAtPixel(this, 3, 22, -1);
+    function logGroups() {
+        var msg = "";
+        for (var y = 0; y < texInfo.mHeight; y++) {
+            for (var x = 0; x < texInfo.mWidth; x++) {
+                var index = ((texInfo.mHeight - y - 1) * texInfo.mWidth) + x;
+                msg += String.fromCharCode(33 + (bounded[index] % 95));
+            }
+            msg += "\n";
+        }
+        console.log(msg)
+    }
     
-    spikeAtPixel(this, 10, 6, 0);
-    spikeAtPixel(this, 20, 6, 0);
+    var x, y;
+    // mark open spaces in bounded array
+    var gates = [];
+    var keys = [];
+    for (y = 0; y < texInfo.mHeight; y++) {
+        for (x = 0; x < texInfo.mWidth; x++) {
+            var index = (y * 4 * texInfo.mWidth) + x * 4;
+            var r  = pixelArray[index];
+            var g = pixelArray[index + 1];
+            var b = pixelArray[index + 2];
+            var alpha = pixelArray[index + 3];
+            var shade = r + g + b;
+            if (alpha > 0.0 && (shade === 0 || shade === 255 * 3)) // transparent and black or white
+                bounded[index/4] = 0; // wall
+            else {
+                bounded[index/4] = -1; // pathway
+                if (alpha > 0) {
+                    if (r > 0 && g === 0 && b === 0) {
+                        console.log("Creating spike at " + x + "," + y );
+                        spikeAtPixel(this, x, texInfo.mHeight - y - 1, -Math.floor(r / (255 / 4)));
+                    }
+                    if (g > 0 && r === 0 && b === 0) {
+                        console.log("Creating gate " + g + " at " + x + "," + y );
+                        gates[g] = gateAtPixel(this, x, texInfo.mHeight - y - 1, -Math.floor(g / (255 / 4)));
+                    }
+                    if (b > 0 && r === 0 && g === 0) {
+                        console.log("Creating key " + b + " at " + x + "," + y );
+                        keys[b] = keyAtPixel(this, x, texInfo.mHeight - y - 1);
+                    }
+                }
+            }
+        }
+    }
+    logGroups();
+    for (var i in keys) {
+        keys[i].setGate(gates[i]); // link key to corresponding gate (green-ness == blue-ness)
+    }
     
-    var gate = gateAtPixel(this, 15, 3, 0);
-    keyAtPixel(this, 4, 5, gate);
+    // group contiguous wall segments on rows
+    var boxNum = 1;
+    var prevBound = -1;
+    for (y = 0; y < texInfo.mHeight; y++) {
+        for (x = 0; x < texInfo.mWidth; x++) {
+            var index = (y * texInfo.mWidth) + x;
+            if (bounded[index] >= 0) // wall here
+                bounded[index] = boxNum; // mark bounded with bound group
+            else if (prevBound >= 0) // open here & prevBound was wall
+                boxNum++; // new bound group
+            prevBound = bounded[index];
+        }
+        // about to move to next row...
+        if (prevBound >= 0) // bound was wall
+            boxNum++; // new bound group
+    }
+    logGroups();
     
-    gate = gateAtPixel(this, 22, 11, 0);
-    keyAtPixel(this, 16, 10, gate);
+    var linkedBound = -1;
+    var linkStart = 0;
+    var prevGroup = -1;
+    var prevLink = -1;
+    for (y = 1; y < texInfo.mHeight; y++) {
+        var rowOffset = (y * texInfo.mWidth);
+        for (x = 0; x < texInfo.mWidth; x++) {
+            var index = (y * texInfo.mWidth) + x;
+            var linkedIndex = ((y - 1) * texInfo.mWidth) + x; // index 1 row up
+            if (linkedBound >= 0) { // continue checking potential link
+                if (bounded[linkedIndex] != linkedBound || bounded[index] != prevGroup) { // link is broken
+                    if (bounded[linkedIndex] != linkedBound) {
+                        console.log(linkStart,linkedBound);
+                        console.log('linking on row ' + y + ' from ' + linkStart + ' to ' + (x-1));
+                        for (var z = linkStart; z < x; z++) {// from linkStart to previous index on this row...
+                            if (bounded[rowOffset + z] === -1)
+                                console.log("It's overwriting a pathway! Nooooooooo!")
+                            bounded[rowOffset + z] = linkedBound; // move linked indexes in this row to group of above row
+                        }
+                    }
+                    linkedBound = -1; // ready to look for a new link
+                }
+            }
+            if (linkedBound === -1) { // ready to check for new link
+                if (bounded[index] >= 0 && bounded[linkedIndex] >= 0 && bounded[linkedIndex] != prevLink) { // both are wall
+                    if (prevLink !== -1 && bounded[linkedIndex + 1] === prevLink)
+                        bounded[index] = prevGroup;
+                    else {
+                        linkStart = x; // remember where the link starts
+                        linkedBound = bounded[linkedIndex]; // remember which group is above
+                        console.log('searching for link on row ' + y + ' from ' + linkStart + ' for ' + linkedBound + ' with ' + bounded[index]);
+                    }
+                }
+            }
+            prevGroup = bounded[index];
+            prevLink = bounded[linkedIndex];
+        }
+        // about to move to next row...
+        if (linkedBound >= 0 && bounded[linkedIndex] == linkedBound) { // group extends to end of row
+            console.log(linkStart,linkedBound);
+            console.log('linking at end of row ' + y + ' from ' + linkStart + ' to ' + x);
+            for (var z = linkStart; z < x; z++) { // from linkStart to current index on this row...
+                if (bounded[rowOffset + z] === -1)
+                    console.log("It's overwriting a pathway! Nooooooooo!")
+                bounded[rowOffset + z] = linkedBound; // move linked indexes in this row to group of above row
+            }
+        }
+        logGroups();
+    }
+    logGroups();
+    
+    // find top-left and bottom-right corner of each bound group
+    var boundRanges = [];
+    for (y = 0; y < texInfo.mHeight; y++) {
+        for (x = 0; x < texInfo.mWidth; x++) {
+            var group = bounded[(y * texInfo.mWidth) + x];
+            var range = boundRanges[group];
+            if (!range) {
+                boundRanges[group] = [x,y,x+1,y+1];
+            } else {
+                range[0] = Math.min(x, range[0]);
+                range[1] = Math.min(y, range[1]);
+                range[2] = Math.max(x+1, range[2]);
+                range[3] = Math.max(y+1, range[3]);
+            }
+        }
+    }
+    // generate wall bounds around groups
+    for (var i in boundRanges) {
+        if (i > 0) {
+            var bounds = boundRanges[i];
+            wallAtPixels(this, bounds[0], texInfo.mHeight-bounds[3], bounds[2], texInfo.mHeight-bounds[1]);
+        }
+    }
+    
+    
+    //wallAtPixels(this, 0,   1,  14, 4);
+    //wallAtPixels(this, 17,  1,  32, 4);
+    //wallAtPixels(this, 0,   4,  3,  32);
+    //wallAtPixels(this, 6,   4,  7,  14);
+    //wallAtPixels(this, 10,  7,  15, 14);
+    //wallAtPixels(this, 13,  14, 15, 19);
+    //wallAtPixels(this, 13,  19, 18, 28);
+    //wallAtPixels(this, 7,   26, 13, 31);
+    //wallAtPixels(this, 13,  28, 25, 31);
+    //wallAtPixels(this, 4,   31, 28, 32);
+    //wallAtPixels(this, 3,   23, 4,  32);
+    //wallAtPixels(this, 7,   23, 10, 26);
+    //wallAtPixels(this, 3,   17, 10, 20);
+    //wallAtPixels(this, 28,  4,  32, 32);
+    //wallAtPixels(this, 24,  4,  28, 12);
+    //wallAtPixels(this, 18,  7,  21, 16);
+    //wallAtPixels(this, 21,  15, 25, 16);
+    //wallAtPixels(this, 24,  16, 25, 21);
+    //wallAtPixels(this, 20,  19, 21, 25);
+    //wallAtPixels(this, 21,  24, 28, 25);
+    //wallAtPixels(this, 15,  7,  18, 9);
+    
+    //spikeAtPixel(this, 3, 20, -1);
+    //spikeAtPixel(this, 3, 21, -1);
+    //spikeAtPixel(this, 3, 22, -1);
+    
+    //spikeAtPixel(this, 10, 6, 0);
+    //spikeAtPixel(this, 20, 6, 0);
 };
 
 Maze.prototype.lightOn = function () {

@@ -14,12 +14,12 @@
 var kKeyWidth = 2.0;
 var kKeyHeight = 4.0;
 
-function Key(texture, atX, atY, gate) {
+function Key(texture, atX, atY) {
         
     var w = kKeyWidth;
     var h = kKeyHeight;
     
-    this.mGate = gate;
+    this.mGate = null;
     
     this.mKey = new SpriteRenderable(texture);
     this.mKey.setColor([1,1,1,0]);
@@ -30,8 +30,15 @@ function Key(texture, atX, atY, gate) {
 }
 gEngine.Core.inheritPrototype(Key, GameObject);
 
+Key.prototype.setGate = function (gate) {
+    this.mGate = gate;
+};
+
 Key.prototype.pickup = function () {
-    this.mGate.unlock();
+    if (this.mGate !== null) {
+        this.mGate.unlock();
+        console.log("Unlocked gate with key");
+    }
 };
 
 Key.prototype.update = function (aCamera) {

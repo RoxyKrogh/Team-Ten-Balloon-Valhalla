@@ -31,17 +31,21 @@ def blur(image, drawable, repetition_count):
 
 
 def cloudify_maze(image, drawable):
+    pdb.gimp_image_select_color(image, 2, drawable, (255,255,255)) # select all white pixels
+    pdb.gimp_selection_invert(image) # invert the selection
+    pdb.gimp_edit_clear(drawable) # delete the selected pixels
+    pdb.gimp_selection_none(image) # clear the selection (select nothing)
     pdb.plug_in_colortoalpha(image, drawable, clear_color) # make black pixels transparent
     pdb.gimp_context_set_interpolation(0) # point filtering
     pdb.gimp_image_scale(image, out_size, out_size) # upscale image
-    blur(image, drawable, blur_repetitions)
+    blur(image, drawable, blur_repetitions) # apply blur filter 1+ times
     float_sel = solidify_alpha(image, drawable, copy_repetitions) # copy/paste image, twice (sharpen edge blur)
     pdb.plug_in_cubism(image, drawable, puff_size, puff_variation, 1) # add cloud puffiness
-    merge_selection(float_sel)
+    merge_selection(float_sel) # merge the pasted "floating" layer with the image
     pdb.plug_in_cubism(image, drawable, puff_size, puff_variation, 1) # add cloud fluffiness
-    blur(image, drawable, blur_repetitions)
+    blur(image, drawable, blur_repetitions) # apply blur filer 1+ times
     float_sel = solidify_alpha(image, drawable, copy_repetitions) # copy/paste image, twice (sharpen edge blur)
-    merge_selection(float_sel)
+    merge_selection(float_sel) # merge the pasted "floating" layer with the image
 
 
 def run(in_file, out_file):
