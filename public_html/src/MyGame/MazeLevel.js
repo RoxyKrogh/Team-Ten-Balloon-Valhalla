@@ -16,7 +16,7 @@ function MazeLevel() {
     this.kSpikeTex = "assets/spike_lres.png";
     this.kGateTex = "assets/gate.png";
     this.kKeyTex = "assets/key.png";
-    this.kMazeWalls = "assets/maze.png";
+    this.kMazeWalls = "assets/maze_clouds.png";
     
     this.kWinHeight = 90; // height balloons must reach to win
     

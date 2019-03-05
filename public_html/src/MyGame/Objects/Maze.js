@@ -29,6 +29,7 @@ Maze.prototype.draw = function (aCamera) {
     this.mShapes.draw(aCamera);
     this.mHazards.draw(aCamera);
     this.mKeys.draw(aCamera);
+    if (!gEngine.Input.isKeyPressed(gEngine.Input.keys.N))
     this.mMazeTexture.draw(aCamera);
     if (this.rep === true) {
         this.mPset.draw(aCamera);
@@ -116,7 +117,7 @@ Maze.prototype.createBounds = function (hazardTex, gateTex, keyTex, x, y, w, h, 
     wallAtPixels(this, 0,   1,  14, 4);
     wallAtPixels(this, 17,  1,  32, 4);
     wallAtPixels(this, 0,   4,  3,  32);
-    wallAtPixels(this, 6,   4,  8,  14);
+    wallAtPixels(this, 6,   4,  7,  14);
     wallAtPixels(this, 10,  7,  15, 14);
     wallAtPixels(this, 13,  14, 15, 19);
     wallAtPixels(this, 13,  19, 18, 28);
@@ -128,11 +129,11 @@ Maze.prototype.createBounds = function (hazardTex, gateTex, keyTex, x, y, w, h, 
     wallAtPixels(this, 3,   17, 10, 20);
     wallAtPixels(this, 28,  4,  32, 32);
     wallAtPixels(this, 24,  4,  28, 12);
-    wallAtPixels(this, 18,  7,  21, 17);
-    wallAtPixels(this, 21,  15, 25, 17);
-    wallAtPixels(this, 24,  17, 25, 21);
-    wallAtPixels(this, 20,  19, 21, 26);
-    wallAtPixels(this, 21,  24, 28, 26);
+    wallAtPixels(this, 18,  7,  21, 16);
+    wallAtPixels(this, 21,  15, 25, 16);
+    wallAtPixels(this, 24,  16, 25, 21);
+    wallAtPixels(this, 20,  19, 21, 25);
+    wallAtPixels(this, 21,  24, 28, 25);
     wallAtPixels(this, 15,  7,  18, 9);
     
     spikeAtPixel(this, 3, 20, -1);
