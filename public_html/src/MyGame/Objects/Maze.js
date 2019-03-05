@@ -146,7 +146,7 @@ Maze.prototype.createBounds = function (pixelTexture, hazardTex, gateTex, keyTex
             var b = pixelArray[index + 2];
             var alpha = pixelArray[index + 3];
             var shade = r + g + b;
-            if (alpha > 0.0 && (shade === 0 || shade === 255 * 3)) // transparent and black or white
+            if (alpha > 0.0 && shade === 255 * 3) // transparent and black or white
                 bounded[index/4] = 0; // wall
             else {
                 bounded[index/4] = -1; // pathway
