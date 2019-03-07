@@ -18,6 +18,7 @@ function MazeLevel() {
     this.kKeyTex = "assets/key.png";
     this.kMazePixels = "assets/maze_pixels.png";
     this.kMazeWalls = "assets/maze_clouds.png";
+    this.kSkyTex = "assets/sky.png";
     
     this.kWinHeight = 90; // height balloons must reach to win
     
@@ -31,6 +32,7 @@ function MazeLevel() {
     
     this.mLabels = null;
     
+    this.mSky = null;
     this.world = null;
     
     this.mTargetAngle = 0;
@@ -48,6 +50,7 @@ MazeLevel.prototype.loadScene = function () {
     gEngine.Textures.loadTexture(this.kMazeWalls);
     gEngine.Textures.loadTexture(this.kGateTex);
     gEngine.Textures.loadTexture(this.kKeyTex);
+    gEngine.Textures.loadTexture(this.kSkyTex);
 };
 
 MazeLevel.prototype.unloadScene = function () {
@@ -57,6 +60,7 @@ MazeLevel.prototype.unloadScene = function () {
     gEngine.Textures.unloadTexture(this.kMazeWalls);
     gEngine.Textures.unloadTexture(this.kGateTex);
     gEngine.Textures.unloadTexture(this.kKeyTex);
+    gEngine.Textures.unloadTexture(this.kSkyTex);
     
     if (this.mNextState === "Win") {
         alert("You win!");
@@ -107,6 +111,10 @@ MazeLevel.prototype.initialize = function () {
     this.mRightBalloon.setUpVector(this.mRightCamera.getUpVector());
     this.world.mShapes.addToSet(this.mRightBalloon);
     
+    this.mSky = new SpriteRenderable(this.kSkyTex);
+    this.mSky.getXform().setPosition(0, 0);
+    this.mSky.getXform().setSize(400, 200);
+    
     this.mLabels = new GameObjectSet();
 };
 
@@ -120,6 +128,7 @@ MazeLevel.prototype.addLabel = function(text, color, x, y, h) {
 
 MazeLevel.prototype.drawView = function(aCamera) {
     aCamera.setupViewProjection();
+    this.mSky.draw(aCamera);
     this.world.draw(aCamera);
     this.mLabels.draw(aCamera);
 };
@@ -198,6 +207,12 @@ MazeLevel.prototype.update = function () {
     if (leftHeight > this.kWinHeight && rightHeight > this.kWinHeight)
         this.win();
     
+    
+    var time = (Date.now() / 50000.0) % 1.0;
+    console.log(time, time + 1.0);
+    this.mSky.setElementUVCoordinate(time, time + 1.0, 0.0, 1.0);
+    
     // Move cameras
     this.updateCameras();
+    this.mSky.getXform().setRotationInRad(this.mSmoothAngle.getValue());
 };
