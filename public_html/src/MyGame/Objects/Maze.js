@@ -9,9 +9,12 @@
 /* find out more about jslint: http://www.jslint.com/help.html */
 
 "use strict";
-function Maze(pixelTexture, texture, hazardTex, gateTex, keyTex, x, y, w, h, res, frct, p) {
+function Maze(pixelTexture, texture, normalTex, hazardTex, gateTex, keyTex, x, y, w, h, res, frct, p) {
     
-    this.mMazeTexture = new LightRenderable(texture);
+    if (normalTex !== null)
+        this.mMazeTexture = new IllumRenderable(texture, normalTex);
+    else
+        this.mMazeTexture = new LightRenderable(texture);
     this.mMazeTexture.getXform().setPosition(x, y);
     this.mMazeTexture.getXform().setSize(w, h);
 

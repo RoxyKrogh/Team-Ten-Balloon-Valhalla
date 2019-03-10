@@ -19,6 +19,7 @@ function MazeLevel() {
     this.kMazePixels = "assets/maze_pixels.png";
     this.kMazeWalls = "assets/maze_clouds.png";
     this.kSkyTex = "assets/sky.png";
+    this.kMazeNormals = "assets/maze_normals.png";
     
     this.kWinHeight = 90; // height balloons must reach to win
     
@@ -53,6 +54,7 @@ MazeLevel.prototype.loadScene = function () {
     gEngine.Textures.loadTexture(this.kGateTex);
     gEngine.Textures.loadTexture(this.kKeyTex);
     gEngine.Textures.loadTexture(this.kSkyTex);
+    gEngine.Textures.loadTexture(this.kMazeNormals);
 };
 
 MazeLevel.prototype.unloadScene = function () {
@@ -63,6 +65,7 @@ MazeLevel.prototype.unloadScene = function () {
     gEngine.Textures.unloadTexture(this.kGateTex);
     gEngine.Textures.unloadTexture(this.kKeyTex);
     gEngine.Textures.unloadTexture(this.kSkyTex);
+    gEngine.Textures.unloadTexture(this.kMazeNormals);
     
     if (this.mNextState === "Win") {
         alert("You win!");
@@ -101,7 +104,7 @@ MazeLevel.prototype.initialize = function () {
     
     // sets the background to gray
     gEngine.DefaultResources.setGlobalAmbientIntensity(3);
-    this.world = new Maze(this.kMazePixels, this.kMazeWalls, this.kSpikeTex, this.kGateTex, this.kKeyTex, 0,0,100,100,.3,.7,false); 
+    this.world = new Maze(this.kMazePixels, this.kMazeWalls, this.kMazeNormals, this.kSpikeTex, this.kGateTex, this.kKeyTex, 0,0,100,100,.3,.7,false); 
     
     this.mLeftBalloon = new Balloon(this.kBalloonTex, -30, -40);
     this.mLeftBalloon.getRenderable().setColor([1,0,0,0.5]);
