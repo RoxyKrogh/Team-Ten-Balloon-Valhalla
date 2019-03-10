@@ -21,6 +21,7 @@ function MazeLevel() {
     this.kSkyTex = "assets/sky.png";
     this.kMazeNormals = "assets/maze_normals.png";
     this.kMazeEdge = "assets/maze_edge.png";
+    this.kBalloonParticle = "assets/balloon_scrap.png";
     
     this.kWinHeight = 90; // height balloons must reach to win
     
@@ -43,6 +44,8 @@ function MazeLevel() {
     this.mSmoothAngle = null;
     
     this.mNextState = "Lose";
+    this.mEnding = false;
+    this.mCountdown = 120;
 }
 gEngine.Core.inheritPrototype(MazeLevel, Scene);
 
@@ -57,6 +60,7 @@ MazeLevel.prototype.loadScene = function () {
     gEngine.Textures.loadTexture(this.kSkyTex);
     gEngine.Textures.loadTexture(this.kMazeNormals);
     gEngine.Textures.loadTexture(this.kMazeEdge);
+    gEngine.Textures.loadTexture(this.kBalloonParticle);
 };
 
 MazeLevel.prototype.unloadScene = function () {
@@ -69,6 +73,7 @@ MazeLevel.prototype.unloadScene = function () {
     gEngine.Textures.unloadTexture(this.kSkyTex);
     gEngine.Textures.unloadTexture(this.kMazeNormals);
     gEngine.Textures.unloadTexture(this.kMazeEdge);
+    gEngine.Textures.unloadTexture(this.kBalloonParticle);
     
     if (this.mNextState === "Win") {
         gEngine.Core.startScene(new WinScreen());
@@ -109,7 +114,7 @@ MazeLevel.prototype.initialize = function () {
     
     // sets the background to gray
     gEngine.DefaultResources.setGlobalAmbientIntensity(3);
-    this.world = new Maze(this.kMazePixels, this.kMazeWalls, this.kMazeEdge, this.kMazeNormals, this.kSpikeTex, this.kGateTex, this.kKeyTex, 0,0,100,100,.3,.7,false); 
+    this.world = new Maze(this.kMazePixels, this.kMazeWalls, this.kMazeEdge, this.kMazeNormals, this.kSpikeTex, this.kGateTex, this.kKeyTex, 0,0,100,100,.3,.7,true); 
     
     this.mLeftBalloon = new Balloon(this.kBalloonTex, -30, -40);
     this.mLeftBalloon.getRenderable().setColor([1,0,0,0.5]);
@@ -124,6 +129,7 @@ MazeLevel.prototype.initialize = function () {
     this.mSky = new ScrollRenderable(this.kSkyTex, 0.02);
     this.mSky.getXform().setPosition(0, 0);
     this.mSky.getXform().setSize(400, 200);
+    this.mSky.getXform().setZPos(-1);
     
     this.mValhallaLight = new Light();
     this.mValhallaLight.setLightType(Light.eLightType.eDirectionalLight);
@@ -175,15 +181,28 @@ MazeLevel.prototype.updateCameras = function () {
 
 MazeLevel.prototype.popBalloon = function (balloon) {
     this.mNextState = "Lose";
-    gEngine.GameLoop.stop();
+    balloon.setVisibility(false);
+    var x = balloon.getXform().getXPos();
+    var y = balloon.getXform().getYPos();
+    for (var i = 0; i < 10; ++i) {
+        var p = this.world.createParticle(x, y, this.kBalloonParticle);
+        var color = balloon.getRenderable().getColor();
+        p.getRenderable().setColor([color[0], color[1], color[2], 1]);
+        this.world.mPset.addToSet(p);
+    }
+    this.mEnding = true;
 };
 
 MazeLevel.prototype.win = function () {
     this.mNextState = "Win";
-    gEngine.GameLoop.stop();
+    this.mEnding = true;
 };
 
 MazeLevel.prototype.update = function () {
+    
+    if (this.mEnding && this.mCountdown-- <= 0) {
+        gEngine.GameLoop.stop();
+    }
     
     // Rotation controls
     if (gEngine.Input.isKeyClicked(gEngine.Input.keys.Left)) {
@@ -199,38 +218,39 @@ MazeLevel.prototype.update = function () {
     // Update gameobjects
     this.world.update();
     
-    // Test for collisions between balloons and spikes
-    var wcCoord = [0,0];
-    if (this.world.testHazards(this.mLeftBalloon, wcCoord))
-        this.popBalloon(this.mLeftBalloon);
-    if (this.world.testHazards(this.mRightBalloon, wcCoord))
-        this.popBalloon(this.mRightBalloon);
-    
-    var openedGate = this.world.bumpIntoGates(this.mLeftBalloon);
-    openedGate = this.world.bumpIntoGates(this.mRightBalloon) || openedGate;
-    if (openedGate) {
-        // shake the camera after opening a gate
-        var x = 0.5, y = 0.5, freq = 0.25, dur = 60;
-        this.mLeftCamera.shake(x, y, freq, dur);
-        this.mRightCamera.shake(x, y, freq, dur);
-        this.mMapCamera.shake(x, y, freq, dur);
-    };
-    
-    this.world.pickupKeys(this.mLeftBalloon);
-    this.world.pickupKeys(this.mRightBalloon);
-    
-    // Test balloon heights for win condition
-    var up = this.mLeftCamera.getUpVector();
-    var offset = [0,0];
-    vec2.subtract(offset, this.mLeftBalloon.getXform().getPosition(), this.world.pos);
-    var leftHeight = vec2.dot(offset, up);
-    vec2.subtract(offset, this.mRightBalloon.getXform().getPosition(), this.world.pos);
-    var rightHeight = vec2.dot(offset, up);
-    if (leftHeight > this.kWinHeight && rightHeight > this.kWinHeight)
-        this.win();
-    
-    this.mSky.update();
-    
+    if (!this.mEnding) {
+        // Test for collisions between balloons and spikes
+        var wcCoord = [0,0];
+        if (this.world.testHazards(this.mLeftBalloon, wcCoord))
+            this.popBalloon(this.mLeftBalloon);
+        if (this.world.testHazards(this.mRightBalloon, wcCoord))
+            this.popBalloon(this.mRightBalloon);
+
+        var openedGate = this.world.bumpIntoGates(this.mLeftBalloon);
+        openedGate = this.world.bumpIntoGates(this.mRightBalloon) || openedGate;
+        if (openedGate) {
+            // shake the camera after opening a gate
+            var x = 0.5, y = 0.5, freq = 0.25, dur = 60;
+            this.mLeftCamera.shake(x, y, freq, dur);
+            this.mRightCamera.shake(x, y, freq, dur);
+            this.mMapCamera.shake(x, y, freq, dur);
+        };
+
+        this.world.pickupKeys(this.mLeftBalloon);
+        this.world.pickupKeys(this.mRightBalloon);
+
+        // Test balloon heights for win condition
+        var up = this.mLeftCamera.getUpVector();
+        var offset = [0,0];
+        vec2.subtract(offset, this.mLeftBalloon.getXform().getPosition(), this.world.pos);
+        var leftHeight = vec2.dot(offset, up);
+        vec2.subtract(offset, this.mRightBalloon.getXform().getPosition(), this.world.pos);
+        var rightHeight = vec2.dot(offset, up);
+        if (leftHeight > this.kWinHeight && rightHeight > this.kWinHeight)
+            this.win();
+
+        this.mSky.update();
+    }
     // Move cameras
     this.updateCameras();
     this.mSky.getXform().setRotationInRad(this.mSmoothAngle.getValue());

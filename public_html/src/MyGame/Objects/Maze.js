@@ -358,9 +358,9 @@ Maze.prototype.particleCollision = function () {
     }
 };
 
-Maze.prototype.createParticle = function (atX, atY, image) {
+Maze.prototype.createParticle = function (atX, atY) {
     var life = 30 + Math.random() * 200;
-    var p = new ParticleGameObject(image, atX, atY, life);
+    var p = new ParticleGameObject("assets/balloon_scrap.png", atX, atY, life);
     p.getRenderable().setColor([.61, .30, .08, 1]);
 
     // size of the particle
