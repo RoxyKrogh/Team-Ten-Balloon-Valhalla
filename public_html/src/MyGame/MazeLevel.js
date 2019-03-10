@@ -22,6 +22,7 @@ function MazeLevel() {
     this.kSkyTex = "assets/sky.png";
     this.kMazeNormals = "assets/maze_normals.png";
     this.kMazeEdge = "assets/maze_edge.png";
+    this.kMazeEdgeNormals = "assets/maze_edge_normals.png";
     this.kBalloonParticle = "assets/balloon_scrap.png";
     
     this.kWinHeight = 90; // height balloons must reach to win
@@ -62,6 +63,7 @@ MazeLevel.prototype.loadScene = function () {
     gEngine.Textures.loadTexture(this.kSkyTex);
     gEngine.Textures.loadTexture(this.kMazeNormals);
     gEngine.Textures.loadTexture(this.kMazeEdge);
+    gEngine.Textures.loadTexture(this.kMazeEdgeNormals);
     gEngine.Textures.loadTexture(this.kBalloonParticle);
 };
 
@@ -76,6 +78,7 @@ MazeLevel.prototype.unloadScene = function () {
     gEngine.Textures.unloadTexture(this.kSkyTex);
     gEngine.Textures.unloadTexture(this.kMazeNormals);
     gEngine.Textures.unloadTexture(this.kMazeEdge);
+    gEngine.Textures.unloadTexture(this.kMazeEdgeNormals);
     gEngine.Textures.unloadTexture(this.kBalloonParticle);
     
     if (this.mNextState === "Win") {
@@ -117,7 +120,7 @@ MazeLevel.prototype.initialize = function () {
     
     // sets the background to gray
     gEngine.DefaultResources.setGlobalAmbientIntensity(3);
-    this.world = new Maze(this.kMazePixels, this.kMazeWalls, this.kMazeEdge, this.kMazeNormals, this.kSpikeTex, this.kGateTex, this.kKeyTex, 0,0,100,100,.3,.7,true); 
+    this.world = new Maze(this.kMazePixels, this.kMazeWalls, this.kMazeEdge, this.kMazeNormals, this.kMazeEdgeNormals, this.kSpikeTex, this.kGateTex, this.kKeyTex, 0,0,100,100,.3,.7,true); 
     
     this.mLeftBalloon = new Balloon(this.kBalloonTex, this.kBalloonNormalTex, -30, -40);
     this.mLeftBalloon.getRenderable().setColor([1,0,0,0.5]);
@@ -186,6 +189,10 @@ MazeLevel.prototype.updateCameras = function () {
     followBalloon(this.mRightCamera, this.mRightBalloon, angle);
     this.mMapCamera.setRotation(angle);
     this.mMapCamera.update();
+    
+    var up = this.mLeftCamera.getUpVector();
+    var down = [-up[0], -up[1], up[2]];
+    this.mValhallaLight.setDirection(down);
 };
 
 MazeLevel.prototype.popBalloon = function (balloon) {
@@ -198,6 +205,12 @@ MazeLevel.prototype.popBalloon = function (balloon) {
                                           y + 3.0 * (Math.random() - 0.5), 
                                           this.kBalloonParticle);
         p.getRenderable().setColor(balloon.getRenderable().getColor());
+        
+        var up = this.mLeftCamera.getUpVector();
+        var grav = [-up[0], -up[1], up[2]];
+        vec2.scale(grav, grav, 20);
+        p.getParticle().mAcceleration = grav;
+        
         this.world.mPset.addToSet(p);
     }
     this.mEnding = true;

@@ -9,17 +9,18 @@
 /* find out more about jslint: http://www.jslint.com/help.html */
 
 "use strict";
-function Maze(pixelTexture, texture, edgeTex, normalTex, hazardTex, gateTex, keyTex, x, y, w, h, res, frct, p) {
+function Maze(pixelTexture, texture, edgeTex, normalTex, edgeNormalTex, hazardTex, gateTex, keyTex, x, y, w, h, res, frct, p) {
     
     if (normalTex !== null) {
         this.mMazeTexture = new IllumRenderable(texture, normalTex);
+        this.mEdgeTexture = new IllumRenderable(edgeTex, edgeNormalTex);
     } else {
         this.mMazeTexture = new LightRenderable(texture);
+        this.mEdgeTexture = new LightRenderable(edgeTex);
     }
     this.mMazeTexture.getXform().setPosition(x, y);
     this.mMazeTexture.getXform().setSize(w, h);
     
-    this.mEdgeTexture = new LightRenderable(edgeTex);
     this.mEdgeTexture.getXform().setPosition(x, y);
     this.mEdgeTexture.getXform().setSize(w * 1.124, h * 1.124);
 
@@ -364,8 +365,8 @@ Maze.prototype.createParticle = function (atX, atY) {
     //p.setFinalColor([.61, .30, .08, 1]);
 
     // velocity on the particle
-    var fx = 30 * Math.random() - 60 * Math.random();
-    var fy = 20 * Math.random() + 10;
+    var fx = 30 * Math.random() - 15;
+    var fy = 30 * Math.random() - 15;
     p.getParticle().setVelocity([fx, fy]);
 
     // size delta
@@ -376,4 +377,5 @@ Maze.prototype.createParticle = function (atX, atY) {
 
 Maze.prototype.addLight = function (l){
     this.mMazeTexture.addLight(l);
+    this.mEdgeTexture.addLight(l);
 };
