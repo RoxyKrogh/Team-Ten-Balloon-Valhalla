@@ -37,12 +37,12 @@ Maze.prototype.draw = function (aCamera) {
     this.mShapes.draw(aCamera);
     this.mHazards.draw(aCamera);
     this.mKeys.draw(aCamera);
-    if (!gEngine.Input.isKeyPressed(gEngine.Input.keys.N))
-    this.mEdgeTexture.draw(aCamera);
-    this.mMazeTexture.draw(aCamera);
     if (this.rep === true) {
         this.mPset.draw(aCamera);
     }
+    if (!gEngine.Input.isKeyPressed(gEngine.Input.keys.N))
+        this.mEdgeTexture.draw(aCamera);
+    this.mMazeTexture.draw(aCamera);
 };
 
 Maze.prototype.update = function () {
@@ -353,16 +353,15 @@ Maze.prototype.particleCollision = function () {
 };
 
 Maze.prototype.createParticle = function (atX, atY) {
-    var life = 30 + Math.random() * 200;
+    var life = 200 + Math.random() * 100;
     var p = new ParticleGameObject("assets/balloon_scrap.png", atX, atY, life);
-    p.getRenderable().setColor([.61, .30, .08, 1]);
 
     // size of the particle
-    var r = Math.random() * 2.5;
+    var r = 1.0 + Math.random() * 1.5;
     p.getXform().setSize(r, r);
 
     // final color
-    p.setFinalColor([.61, .30, .08, 1]);
+    //p.setFinalColor([.61, .30, .08, 1]);
 
     // velocity on the particle
     var fx = 30 * Math.random() - 60 * Math.random();
@@ -370,7 +369,7 @@ Maze.prototype.createParticle = function (atX, atY) {
     p.getParticle().setVelocity([fx, fy]);
 
     // size delta
-    p.setSizeDelta(0.985);
+    p.setSizeDelta(1.0);
 
     return p;
 };

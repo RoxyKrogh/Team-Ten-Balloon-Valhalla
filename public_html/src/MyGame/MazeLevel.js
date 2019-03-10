@@ -184,10 +184,11 @@ MazeLevel.prototype.popBalloon = function (balloon) {
     balloon.setVisibility(false);
     var x = balloon.getXform().getXPos();
     var y = balloon.getXform().getYPos();
-    for (var i = 0; i < 10; ++i) {
-        var p = this.world.createParticle(x, y, this.kBalloonParticle);
-        var color = balloon.getRenderable().getColor();
-        p.getRenderable().setColor([color[0], color[1], color[2], 1]);
+    for (var i = 0; i < 40; ++i) {
+        var p = this.world.createParticle(x + 3.0 * (Math.random() - 0.5), 
+                                          y + 3.0 * (Math.random() - 0.5), 
+                                          this.kBalloonParticle);
+        p.getRenderable().setColor(balloon.getRenderable().getColor());
         this.world.mPset.addToSet(p);
     }
     this.mEnding = true;
