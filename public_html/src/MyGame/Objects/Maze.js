@@ -267,36 +267,6 @@ Maze.prototype.createBounds = function (pixelTexture, hazardTex, gateTex, keyTex
             wallAtPixels(this, bounds[0], texInfo.mHeight-bounds[3], bounds[2], texInfo.mHeight-bounds[1]);
         }
     }
-    
-    
-    //wallAtPixels(this, 0,   1,  14, 4);
-    //wallAtPixels(this, 17,  1,  32, 4);
-    //wallAtPixels(this, 0,   4,  3,  32);
-    //wallAtPixels(this, 6,   4,  7,  14);
-    //wallAtPixels(this, 10,  7,  15, 14);
-    //wallAtPixels(this, 13,  14, 15, 19);
-    //wallAtPixels(this, 13,  19, 18, 28);
-    //wallAtPixels(this, 7,   26, 13, 31);
-    //wallAtPixels(this, 13,  28, 25, 31);
-    //wallAtPixels(this, 4,   31, 28, 32);
-    //wallAtPixels(this, 3,   23, 4,  32);
-    //wallAtPixels(this, 7,   23, 10, 26);
-    //wallAtPixels(this, 3,   17, 10, 20);
-    //wallAtPixels(this, 28,  4,  32, 32);
-    //wallAtPixels(this, 24,  4,  28, 12);
-    //wallAtPixels(this, 18,  7,  21, 16);
-    //wallAtPixels(this, 21,  15, 25, 16);
-    //wallAtPixels(this, 24,  16, 25, 21);
-    //wallAtPixels(this, 20,  19, 21, 25);
-    //wallAtPixels(this, 21,  24, 28, 25);
-    //wallAtPixels(this, 15,  7,  18, 9);
-    
-    //spikeAtPixel(this, 3, 20, -1);
-    //spikeAtPixel(this, 3, 21, -1);
-    //spikeAtPixel(this, 3, 22, -1);
-    
-    //spikeAtPixel(this, 10, 6, 0);
-    //spikeAtPixel(this, 20, 6, 0);
 };
 
 Maze.prototype.lightOn = function () {
@@ -321,7 +291,7 @@ Maze.prototype.blockAt = function (x1, y1, x2, y2, res, frct, art) {
     var g = new GameObject(p);
     var r = new RigidRectangle(xf, w, h);
     g.setRigidBody(r);
-    g.toggleDrawRigidShape();
+    //g.toggleDrawRigidShape();
 
     r.setMass(0);
     r.setRestitution(res);
