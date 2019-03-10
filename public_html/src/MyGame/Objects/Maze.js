@@ -134,7 +134,7 @@ Maze.prototype.createBounds = function (pixelTexture, hazardTex, gateTex, keyTex
     var binding = false, boundW = 0;
     
     function logGroups() {
-        var msg = "";
+        /*var msg = "";
         for (var y = 0; y < texInfo.mHeight; y++) {
             for (var x = 0; x < texInfo.mWidth; x++) {
                 var index = ((texInfo.mHeight - y - 1) * texInfo.mWidth) + x;
@@ -142,7 +142,7 @@ Maze.prototype.createBounds = function (pixelTexture, hazardTex, gateTex, keyTex
             }
             msg += "\n";
         }
-        console.log(msg);
+        console.log(msg);*/
     }
     
     var x, y;
@@ -213,11 +213,8 @@ Maze.prototype.createBounds = function (pixelTexture, hazardTex, gateTex, keyTex
             if (linkedBound >= 0) { // continue checking potential link
                 if (bounded[linkedIndex] !== linkedBound || bounded[index] !== prevGroup) { // link is broken
                     if (bounded[linkedIndex] !== linkedBound) {
-                        console.log(linkStart,linkedBound);
-                        console.log('linking on row ' + y + ' from ' + linkStart + ' to ' + (x-1));
+                        //console.log('linking on row ' + y + ' from ' + linkStart + ' to ' + (x-1));
                         for (var z = linkStart; z < x; z++) {// from linkStart to previous index on this row...
-                            if (bounded[rowOffset + z] === -1)
-                                console.log("It's overwriting a pathway! Nooooooooo!");
                             bounded[rowOffset + z] = linkedBound; // move linked indexes in this row to group of above row
                         }
                     }
@@ -231,7 +228,7 @@ Maze.prototype.createBounds = function (pixelTexture, hazardTex, gateTex, keyTex
                     else {
                         linkStart = x; // remember where the link starts
                         linkedBound = bounded[linkedIndex]; // remember which group is above
-                        console.log('searching for link on row ' + y + ' from ' + linkStart + ' for ' + linkedBound + ' with ' + bounded[index]);
+                        //console.log('searching for link on row ' + y + ' from ' + linkStart + ' for ' + linkedBound + ' with ' + bounded[index]);
                     }
                 }
             }
@@ -240,11 +237,8 @@ Maze.prototype.createBounds = function (pixelTexture, hazardTex, gateTex, keyTex
         }
         // about to move to next row...
         if (linkedBound >= 0 && bounded[linkedIndex] === linkedBound) { // group extends to end of row
-            console.log(linkStart,linkedBound);
-            console.log('linking at end of row ' + y + ' from ' + linkStart + ' to ' + x);
+            //console.log('linking at end of row ' + y + ' from ' + linkStart + ' to ' + x);
             for (var z = linkStart; z < x; z++) { // from linkStart to current index on this row...
-                if (bounded[rowOffset + z] === -1)
-                    console.log("It's overwriting a pathway! Nooooooooo!");
                 bounded[rowOffset + z] = linkedBound; // move linked indexes in this row to group of above row
             }
         }
