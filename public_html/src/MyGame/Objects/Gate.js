@@ -19,7 +19,7 @@ function Gate(texture, atX, atY, direction) {
     var w = kGateWidth;
     var h = kGateHeight;
     
-    this.mLocked = false;
+    this.mLocked = true;
     this.mOpen = false;
     
     this.mGate = new SpriteRenderable(texture);
