@@ -373,3 +373,7 @@ Maze.prototype.createParticle = function (atX, atY) {
 
     return p;
 };
+
+Maze.prototype.addLight = function (l){
+    this.mMazeTexture.addLight(l);
+};

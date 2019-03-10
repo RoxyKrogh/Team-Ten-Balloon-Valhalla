@@ -13,6 +13,7 @@
 
 function MazeLevel() {
     this.kBalloonTex = "assets/balloon_lres.png";
+    this.kBalloonNormalTex = "assets/balloon_normals.png";
     this.kSpikeTex = "assets/spike_lres.png";
     this.kGateTex = "assets/gate_sheet.png";
     this.kKeyTex = "assets/key.png";
@@ -52,6 +53,7 @@ gEngine.Core.inheritPrototype(MazeLevel, Scene);
 
 MazeLevel.prototype.loadScene = function () {
     gEngine.Textures.loadTexture(this.kBalloonTex);
+    gEngine.Textures.loadTexture(this.kBalloonNormalTex);
     gEngine.Textures.loadTexture(this.kSpikeTex);
     gEngine.Textures.loadTexture(this.kMazePixels);
     gEngine.Textures.loadTexture(this.kMazeWalls);
@@ -65,6 +67,7 @@ MazeLevel.prototype.loadScene = function () {
 
 MazeLevel.prototype.unloadScene = function () {
     gEngine.Textures.unloadTexture(this.kBalloonTex);
+    gEngine.Textures.unloadTexture(this.kBalloonNormalTex);
     gEngine.Textures.unloadTexture(this.kSpikeTex);
     gEngine.Textures.unloadTexture(this.kMazePixels);
     gEngine.Textures.unloadTexture(this.kMazeWalls);
@@ -116,12 +119,12 @@ MazeLevel.prototype.initialize = function () {
     gEngine.DefaultResources.setGlobalAmbientIntensity(3);
     this.world = new Maze(this.kMazePixels, this.kMazeWalls, this.kMazeEdge, this.kMazeNormals, this.kSpikeTex, this.kGateTex, this.kKeyTex, 0,0,100,100,.3,.7,true); 
     
-    this.mLeftBalloon = new Balloon(this.kBalloonTex, -30, -40);
+    this.mLeftBalloon = new Balloon(this.kBalloonTex, this.kBalloonNormalTex, -30, -40);
     this.mLeftBalloon.getRenderable().setColor([1,0,0,0.5]);
     this.mLeftBalloon.setUpVector(this.mLeftCamera.getUpVector());
     this.world.mShapes.addToSet(this.mLeftBalloon);
     
-    this.mRightBalloon = new Balloon(this.kBalloonTex, 30, -40);
+    this.mRightBalloon = new Balloon(this.kBalloonTex, this.kBalloonNormalTex, 30, -40);
     this.mRightBalloon.getRenderable().setColor([0,1,0,0.5]);
     this.mRightBalloon.setUpVector(this.mRightCamera.getUpVector());
     this.world.mShapes.addToSet(this.mRightBalloon);
@@ -133,6 +136,12 @@ MazeLevel.prototype.initialize = function () {
     
     this.mValhallaLight = new Light();
     this.mValhallaLight.setLightType(Light.eLightType.eDirectionalLight);
+    this.mValhallaLight.set2DPosition([0, 90]);
+    this.mValhallaLight.setDirection([0, -1, 0]);
+    
+    this.world.addLight(this.mValhallaLight);
+    this.mLeftBalloon.addLight(this.mValhallaLight);
+    this.mRightBalloon.addLight(this.mValhallaLight);
     
     this.mLabels = new GameObjectSet();
 };
