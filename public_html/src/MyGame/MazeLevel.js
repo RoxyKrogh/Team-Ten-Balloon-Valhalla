@@ -134,8 +134,7 @@ MazeLevel.prototype.initialize = function () {
     
     this.mSky = new ScrollRenderable(this.kSkyTex, 0.02);
     this.mSky.getXform().setPosition(0, 0);
-    this.mSky.getXform().setSize(400, 200);
-    this.mSky.getXform().setZPos(-1);
+    this.mSky.getXform().setSize(600, 300);
     
     this.mValhallaLight = new Light();
     this.mValhallaLight.setLightType(Light.eLightType.eDirectionalLight);
@@ -178,11 +177,18 @@ MazeLevel.prototype.draw = function () {
 };
 
 MazeLevel.prototype.updateCameras = function () {
+    var worldHeight = this.mSky.getXform().getHeight();
     function followBalloon(cam, balloon, angle) {
         cam.update();
         cam.setRotation(angle);
-        cam.getWCCenter()[0] = balloon.getXform().getXPos();
-        cam.getWCCenter()[1] = balloon.getXform().getYPos();
+        var worldLimit = worldHeight / 3;
+        var camLimit = cam.getWCWidth() / 2;
+        cam.getWCCenter()[0] = Math.max(-worldLimit + cam.getWCWidth() / 2, 
+                                Math.min(worldLimit - cam.getWCWidth() / 2,
+                                balloon.getXform().getXPos()));
+        cam.getWCCenter()[1] = Math.max(-worldLimit + cam.getWCHeight() / 2, 
+                                Math.min(worldLimit - cam.getWCHeight() / 2,
+                                balloon.getXform().getYPos()));
     }
     var angle = this.mSmoothAngle.getValue();
     followBalloon(this.mLeftCamera, this.mLeftBalloon, angle);
