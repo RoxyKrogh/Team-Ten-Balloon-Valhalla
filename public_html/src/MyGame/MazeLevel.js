@@ -71,12 +71,14 @@ MazeLevel.prototype.unloadScene = function () {
     gEngine.Textures.unloadTexture(this.kMazeEdge);
     
     if (this.mNextState === "Win") {
-        alert("You win!");
+        gEngine.Core.startScene(new WinScreen());
     }
-    if (this.mNextState === "Lose") {
-        alert("Balloon has popped!");
+    else if (this.mNextState === "Lose") {
+        gEngine.Core.startScene(new LoseScreen());
     }
-    gEngine.Core.startScene(new MazeLevel());
+    else {
+        gEngine.Core.startScene(new MazeLevel());
+    }
 };
 
 MazeLevel.prototype.initialize = function () {
