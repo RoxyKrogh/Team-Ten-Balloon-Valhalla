@@ -14,14 +14,18 @@
 var kBalloonWidth = 3.0;
 var kBalloonHeight = 3.0;
 
-function Balloon(spriteTexture, atX, atY) {
+function Balloon(spriteTexture, normalTexture, atX, atY) {
         
     var w = kBalloonWidth;
     var h = kBalloonHeight;
     
     this.mUpVec = [0, 1];
     
-    this.mBalloon = new TextureRenderable(spriteTexture);
+    if(normalTexture !== null)
+        this.mBalloon = new IllumRenderable(spriteTexture, normalTexture);
+    else
+        this.mBalloon = new LightRenderable(spriteTexture);
+    
     this.mBalloon.setColor([1,1,1,0.5]);
     this.mBalloon.getXform().setPosition(atX, atY);
     this.mBalloon.getXform().setSize(w, h);
@@ -51,4 +55,8 @@ Balloon.prototype.update = function (aCamera) {
     vec2.add(p, v, this.getXform().getPosition());
     this.rotateObjPointTo(p, 0.03);
     GameObject.prototype.update.call(this);
+};
+
+Balloon.prototype.addLight = function (l) {
+    this.mBalloon.addLight(l);
 };
