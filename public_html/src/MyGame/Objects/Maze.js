@@ -3,7 +3,7 @@
  */
 
 /*jslint node: true, vars: true */
-/*global gEngine, Scene, GameObjectset, TextureObject, Camera, vec2,
+/*global gEngine, Scene, GameObjectset, TextureObject, Camera, vec2, Light,
  FontRenderable, SpriteRenderable, LineRenderable,
  GameObject */
 /* find out more about jslint: http://www.jslint.com/help.html */
@@ -11,7 +11,7 @@
 "use strict";
 function Maze(pixelTexture, texture, hazardTex, gateTex, keyTex, x, y, w, h, res, frct, p) {
     
-    this.mMazeTexture = new TextureRenderable(texture);
+    this.mMazeTexture = new LightRenderable(texture);
     this.mMazeTexture.getXform().setPosition(x, y);
     this.mMazeTexture.getXform().setSize(w, h);
 
@@ -131,7 +131,7 @@ Maze.prototype.createBounds = function (pixelTexture, hazardTex, gateTex, keyTex
             }
             msg += "\n";
         }
-        console.log(msg)
+        console.log(msg);
     }
     
     var x, y;
@@ -200,13 +200,13 @@ Maze.prototype.createBounds = function (pixelTexture, hazardTex, gateTex, keyTex
             var index = (y * texInfo.mWidth) + x;
             var linkedIndex = ((y - 1) * texInfo.mWidth) + x; // index 1 row up
             if (linkedBound >= 0) { // continue checking potential link
-                if (bounded[linkedIndex] != linkedBound || bounded[index] != prevGroup) { // link is broken
-                    if (bounded[linkedIndex] != linkedBound) {
+                if (bounded[linkedIndex] !== linkedBound || bounded[index] !== prevGroup) { // link is broken
+                    if (bounded[linkedIndex] !== linkedBound) {
                         console.log(linkStart,linkedBound);
                         console.log('linking on row ' + y + ' from ' + linkStart + ' to ' + (x-1));
                         for (var z = linkStart; z < x; z++) {// from linkStart to previous index on this row...
                             if (bounded[rowOffset + z] === -1)
-                                console.log("It's overwriting a pathway! Nooooooooo!")
+                                console.log("It's overwriting a pathway! Nooooooooo!");
                             bounded[rowOffset + z] = linkedBound; // move linked indexes in this row to group of above row
                         }
                     }
@@ -214,7 +214,7 @@ Maze.prototype.createBounds = function (pixelTexture, hazardTex, gateTex, keyTex
                 }
             }
             if (linkedBound === -1) { // ready to check for new link
-                if (bounded[index] >= 0 && bounded[linkedIndex] >= 0 && bounded[linkedIndex] != prevLink) { // both are wall
+                if (bounded[index] >= 0 && bounded[linkedIndex] >= 0 && bounded[linkedIndex] !== prevLink) { // both are wall
                     if (prevLink !== -1 && bounded[linkedIndex + 1] === prevLink)
                         bounded[index] = prevGroup;
                     else {
@@ -228,12 +228,12 @@ Maze.prototype.createBounds = function (pixelTexture, hazardTex, gateTex, keyTex
             prevLink = bounded[linkedIndex];
         }
         // about to move to next row...
-        if (linkedBound >= 0 && bounded[linkedIndex] == linkedBound) { // group extends to end of row
+        if (linkedBound >= 0 && bounded[linkedIndex] === linkedBound) { // group extends to end of row
             console.log(linkStart,linkedBound);
             console.log('linking at end of row ' + y + ' from ' + linkStart + ' to ' + x);
             for (var z = linkStart; z < x; z++) { // from linkStart to current index on this row...
                 if (bounded[rowOffset + z] === -1)
-                    console.log("It's overwriting a pathway! Nooooooooo!")
+                    console.log("It's overwriting a pathway! Nooooooooo!");
                 bounded[rowOffset + z] = linkedBound; // move linked indexes in this row to group of above row
             }
         }

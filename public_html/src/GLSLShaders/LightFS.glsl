@@ -12,7 +12,7 @@ uniform vec4 uPixelColor;
 uniform vec4 uGlobalAmbientColor; // this is shared globally
 uniform float uGlobalAmbientIntensity;
 
-#define kGLSLuLightArraySize 25
+#define kGLSLuLightArraySize 4
     // GLSL Fragment shader requires loop control
     // variable to be a constant number. This number 4
     // says, this fragment shader will _ALWAYS_ process
@@ -106,7 +106,10 @@ vec4 LightEffect(Light lgt) {
 void main(void)  {
     // simple tint based on uPixelColor setting
     vec4 textureMapColor = texture2D(uSampler, vec2(vTexCoord.s, vTexCoord.t));
+
     vec4 lgtResults = uGlobalAmbientIntensity * uGlobalAmbientColor;
+
+    
 
     // now decide if we should illuminate by the light
     if (textureMapColor.a > 0.0) {
@@ -116,11 +119,12 @@ void main(void)  {
             }
         }
     }
+
     lgtResults *= textureMapColor;
 
     // tint the textured area, and leave transparent area as defined by the texture
     vec3 r = vec3(lgtResults) * (1.0-uPixelColor.a) + vec3(uPixelColor) * uPixelColor.a;
-    vec4 result = vec4(r, textureMapColor.a);
+    vec4 result = vec4(r, lgtResults.a);
 
     gl_FragColor = result;
 }

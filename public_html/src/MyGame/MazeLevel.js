@@ -5,7 +5,7 @@
 
 /*jslint node: true, vars: true */
 /*global gEngine, Scene, GameObjectset, TextureObject, Camera, vec2,
-  FontRenderable, SpriteRenderable, LineRenderable,
+  FontRenderable, SpriteRenderable, LineRenderable, Light,
   GameObject */
 /* find out more about jslint: http://www.jslint.com/help.html */
 
@@ -34,6 +34,8 @@ function MazeLevel() {
     
     this.mSky = null;
     this.world = null;
+    
+    this.mValhallaLight = null;
     
     this.mTargetAngle = 0;
     this.mSmoothAngle = null;
@@ -114,6 +116,9 @@ MazeLevel.prototype.initialize = function () {
     this.mSky = new SpriteRenderable(this.kSkyTex);
     this.mSky.getXform().setPosition(0, 0);
     this.mSky.getXform().setSize(400, 200);
+    
+    this.mValhallaLight = new Light();
+    this.mValhallaLight.setLightType(Light.eLightType.eDirectionalLight);
     
     this.mLabels = new GameObjectSet();
 };
