@@ -14,12 +14,13 @@
 function MazeLevel() {
     this.kBalloonTex = "assets/balloon_lres.png";
     this.kSpikeTex = "assets/spike_lres.png";
-    this.kGateTex = "assets/gate.png";
+    this.kGateTex = "assets/gate_sheet.png";
     this.kKeyTex = "assets/key.png";
     this.kMazePixels = "assets/maze_pixels.png";
     this.kMazeWalls = "assets/maze_clouds.png";
     this.kSkyTex = "assets/sky.png";
     this.kMazeNormals = "assets/maze_normals.png";
+    this.kMazeEdge = "assets/maze_edge.png";
     
     this.kWinHeight = 90; // height balloons must reach to win
     
@@ -55,6 +56,7 @@ MazeLevel.prototype.loadScene = function () {
     gEngine.Textures.loadTexture(this.kKeyTex);
     gEngine.Textures.loadTexture(this.kSkyTex);
     gEngine.Textures.loadTexture(this.kMazeNormals);
+    gEngine.Textures.loadTexture(this.kMazeEdge);
 };
 
 MazeLevel.prototype.unloadScene = function () {
@@ -66,6 +68,7 @@ MazeLevel.prototype.unloadScene = function () {
     gEngine.Textures.unloadTexture(this.kKeyTex);
     gEngine.Textures.unloadTexture(this.kSkyTex);
     gEngine.Textures.unloadTexture(this.kMazeNormals);
+    gEngine.Textures.unloadTexture(this.kMazeEdge);
     
     if (this.mNextState === "Win") {
         alert("You win!");
@@ -104,7 +107,7 @@ MazeLevel.prototype.initialize = function () {
     
     // sets the background to gray
     gEngine.DefaultResources.setGlobalAmbientIntensity(3);
-    this.world = new Maze(this.kMazePixels, this.kMazeWalls, this.kMazeNormals, this.kSpikeTex, this.kGateTex, this.kKeyTex, 0,0,100,100,.3,.7,false); 
+    this.world = new Maze(this.kMazePixels, this.kMazeWalls, this.kMazeEdge, this.kMazeNormals, this.kSpikeTex, this.kGateTex, this.kKeyTex, 0,0,100,100,.3,.7,false); 
     
     this.mLeftBalloon = new Balloon(this.kBalloonTex, -30, -40);
     this.mLeftBalloon.getRenderable().setColor([1,0,0,0.5]);
@@ -116,7 +119,7 @@ MazeLevel.prototype.initialize = function () {
     this.mRightBalloon.setUpVector(this.mRightCamera.getUpVector());
     this.world.mShapes.addToSet(this.mRightBalloon);
     
-    this.mSky = new SpriteRenderable(this.kSkyTex);
+    this.mSky = new ScrollRenderable(this.kSkyTex, 0.02);
     this.mSky.getXform().setPosition(0, 0);
     this.mSky.getXform().setSize(400, 200);
     
@@ -156,6 +159,7 @@ MazeLevel.prototype.draw = function () {
 
 MazeLevel.prototype.updateCameras = function () {
     function followBalloon(cam, balloon, angle) {
+        cam.update();
         cam.setRotation(angle);
         cam.getWCCenter()[0] = balloon.getXform().getXPos();
         cam.getWCCenter()[1] = balloon.getXform().getYPos();
@@ -164,6 +168,7 @@ MazeLevel.prototype.updateCameras = function () {
     followBalloon(this.mLeftCamera, this.mLeftBalloon, angle);
     followBalloon(this.mRightCamera, this.mRightBalloon, angle);
     this.mMapCamera.setRotation(angle);
+    this.mMapCamera.update();
 };
 
 MazeLevel.prototype.popBalloon = function (balloon) {
@@ -199,8 +204,15 @@ MazeLevel.prototype.update = function () {
     if (this.world.testHazards(this.mRightBalloon, wcCoord))
         this.popBalloon(this.mRightBalloon);
     
-    this.world.bumpIntoGates(this.mLeftBalloon);
-    this.world.bumpIntoGates(this.mRightBalloon);
+    var openedGate = this.world.bumpIntoGates(this.mLeftBalloon);
+    openedGate = this.world.bumpIntoGates(this.mRightBalloon) || openedGate;
+    if (openedGate) {
+        // shake the camera after opening a gate
+        var x = 0.5, y = 0.5, freq = 0.25, dur = 60;
+        this.mLeftCamera.shake(x, y, freq, dur);
+        this.mRightCamera.shake(x, y, freq, dur);
+        this.mMapCamera.shake(x, y, freq, dur);
+    };
     
     this.world.pickupKeys(this.mLeftBalloon);
     this.world.pickupKeys(this.mRightBalloon);
@@ -215,10 +227,7 @@ MazeLevel.prototype.update = function () {
     if (leftHeight > this.kWinHeight && rightHeight > this.kWinHeight)
         this.win();
     
-    
-    var time = (Date.now() / 50000.0) % 1.0;
-    console.log(time, time + 1.0);
-    this.mSky.setElementUVCoordinate(time, time + 1.0, 0.0, 1.0);
+    this.mSky.update();
     
     // Move cameras
     this.updateCameras();

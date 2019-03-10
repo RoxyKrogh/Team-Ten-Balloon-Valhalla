@@ -9,14 +9,19 @@
 /* find out more about jslint: http://www.jslint.com/help.html */
 
 "use strict";
-function Maze(pixelTexture, texture, normalTex, hazardTex, gateTex, keyTex, x, y, w, h, res, frct, p) {
+function Maze(pixelTexture, texture, edgeTex, normalTex, hazardTex, gateTex, keyTex, x, y, w, h, res, frct, p) {
     
-    if (normalTex !== null)
+    if (normalTex !== null) {
         this.mMazeTexture = new IllumRenderable(texture, normalTex);
-    else
+    } else {
         this.mMazeTexture = new LightRenderable(texture);
+    }
     this.mMazeTexture.getXform().setPosition(x, y);
     this.mMazeTexture.getXform().setSize(w, h);
+    
+    this.mEdgeTexture = new LightRenderable(edgeTex);
+    this.mEdgeTexture.getXform().setPosition(x, y);
+    this.mEdgeTexture.getXform().setSize(w * 1.124, h * 1.124);
 
     this.mShapes = new GameObjectSet();
     this.mHazards = new GameObjectSet();
@@ -33,6 +38,7 @@ Maze.prototype.draw = function (aCamera) {
     this.mHazards.draw(aCamera);
     this.mKeys.draw(aCamera);
     if (!gEngine.Input.isKeyPressed(gEngine.Input.keys.N))
+    this.mEdgeTexture.draw(aCamera);
     this.mMazeTexture.draw(aCamera);
     if (this.rep === true) {
         this.mPset.draw(aCamera);
@@ -60,12 +66,14 @@ Maze.prototype.testHazards = function (gameobj, wcCoord) {
 };
 
 Maze.prototype.bumpIntoGates = function (gameobj) {
+    var bumped = false;
     var i;
     var wcCoord = [];
     for (i = 0; i < this.mGates.mSet.length; i++) {
         if (gameobj.pixelTouches(this.mGates.mSet[i], wcCoord))
-            this.mGates.mSet[i].open();
+            bumped = this.mGates.mSet[i].open() || bumped;
     }
+    return bumped;
 };
 
 Maze.prototype.pickupKeys = function (gameobj) {

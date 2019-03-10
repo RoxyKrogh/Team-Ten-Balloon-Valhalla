@@ -19,13 +19,14 @@ function Gate(texture, atX, atY, direction) {
     var w = kGateWidth;
     var h = kGateHeight;
     
-    this.mLocked = true;
+    this.mLocked = false;
+    this.mOpen = false;
     
     this.mGate = new SpriteRenderable(texture);
     this.mGate.setColor([1,1,1,0]);
     this.mGate.getXform().setPosition(atX, atY);
     this.mGate.getXform().setSize(w, h);
-    //this.mGate.setElementPixelPositions(420, 640, 1024, 784);
+    this.mGate.setElementPixelPositions(0, 256, 0, 256);
     this.mGate.getXform().setRotationInRad(Math.PI / 2 * direction);
 
     GameObject.call(this, this.mGate);
@@ -44,12 +45,15 @@ Gate.prototype.unlock = function () {
 };
 
 Gate.prototype.open = function () {
-    if (!this.mLocked) {
-        this.mDrawRenderable = false;
-        //this.setRigidBody(null);
-        this.getXform().setPosition(10000, 10000);
+    if (!this.mLocked && !this.mOpen) {
+        this.mOpen = true;
+        this.mGate.setElementPixelPositions(256, 512, 0, 256); // set sprite to open state
+        this.getRigidBody().boundTest = function(other) { return false; }; // disable collisions
+        return true;
     }
+    return false;
 };
 
 Gate.prototype.update = function (aCamera) {
+    
 };
