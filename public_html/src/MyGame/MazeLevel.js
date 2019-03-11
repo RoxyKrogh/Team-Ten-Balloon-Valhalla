@@ -25,7 +25,7 @@ function MazeLevel() {
     this.kMazeEdgeNormals = "assets/maze_edge_normals.png";
     this.kBalloonParticle = "assets/balloon_scrap.png";
     
-    this.kWinHeight = 90; // height balloons must reach to win
+    this.kWinHeight = 120; // height balloons must reach to win
     
     // The camera to view the scene
     this.mLeftCamera = null;
@@ -275,6 +275,10 @@ MazeLevel.prototype.update = function () {
         var leftHeight = vec2.dot(offset, up);
         vec2.subtract(offset, this.mRightBalloon.getXform().getPosition(), this.world.pos);
         var rightHeight = vec2.dot(offset, up);
+        if (leftHeight > this.kWinHeight)
+            this.world.mShapes.removeFromSet(this.mLeftBalloon);
+        if (rightHeight > this.kWinHeight)
+            this.world.mShapes.removeFromSet(this.mRightBalloon);
         if (leftHeight > this.kWinHeight && rightHeight > this.kWinHeight)
             this.win();
 
