@@ -197,7 +197,7 @@ MazeLevel.prototype.updateCameras = function () {
     this.mMapCamera.update();
     
     var up = this.mLeftCamera.getUpVector();
-    var down = [-up[0], -up[1], up[2]];
+    var down = [-up[0], -up[1], 0];
     this.mValhallaLight.setDirection(down);
 };
 

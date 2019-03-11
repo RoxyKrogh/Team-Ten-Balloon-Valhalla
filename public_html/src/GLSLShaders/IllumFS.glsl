@@ -3,6 +3,9 @@
 precision mediump float; 
     // sets the precision for floating point computation
 
+
+uniform mat3 uTBN; // tangent bitangent normal (for normal transformation)
+
 // The object that fetches data from texture.
 // Must be set outside the shader.
 uniform sampler2D uSampler;
@@ -141,7 +144,7 @@ void main(void)  {
     // normalMap.y = -normalMap.y;  // flip Y
     //    depending on the normal map you work with, this may or may not be flipped
     // 
-    vec3 N = normalize(normalMap.xyz);
+    vec3 N = normalize(uTBN * normalize(normalMap.xyz));
    
     vec4 shadedResult = uMaterial.Ka + (textureMapColor  * uGlobalAmbientColor * uGlobalAmbientIntensity);
 

@@ -32,6 +32,7 @@ function IllumShader(vertexShaderPath, fragmentShaderPath) {
 
     // reference to the normal map sampler
     this.mNormalSamplerRef = gl.getUniformLocation(this.mCompiledShader, "uNormalSampler");
+    this.mNormalTransform = gl.getUniformLocation(this.mCompiledShader, "uTBN");
 }
 gEngine.Core.inheritPrototype(IllumShader, LightShader);
 //</editor-fold>
@@ -56,6 +57,42 @@ IllumShader.prototype.activateShader = function(pixelColor, aCamera) {
     // in the fragment shader
     this.mMaterialLoader.loadToShader(this.mMaterial);
     gl.uniform3fv(this.mCameraPosRef, this.mCameraPos);
+};
+
+/**
+ * Loads per-object model transform to the vertex shader.
+ * @memberOf SimpleShader
+ * @param {float[]} modelTransform An array of float values representing one or more 4x4 matrices.
+ * @returns {void}
+ */
+IllumShader.prototype.loadObjectTransform = function (modelTransform) {
+    SimpleShader.prototype.loadObjectTransform.call(this, modelTransform);
+    var gl = gEngine.Core.getGL();
+    
+    var v = [0, 0, 0, 0];v
+    var n = vec3.create();
+    var t = vec3.create();
+    var b = vec3.create();
+    vec3.normalize(n, vec4.transformMat4(v, [0,0,1, 0], modelTransform));
+    vec3.normalize(t, vec4.transformMat4(v, [1,0,0, 0], modelTransform));
+    vec3.normalize(b, vec4.transformMat4(v, [0,1,0, 0], modelTransform));
+    var tbn = mat3.create();
+    tbn[0] = t[0];
+    tbn[1] = t[1];
+    tbn[2] = t[2];
+    tbn[3] = b[0];
+    tbn[4] = b[1];
+    tbn[5] = b[2];
+    tbn[6] = n[0];
+    tbn[7] = n[1];
+    tbn[9] = n[2];
+    
+    
+    // loads the modelTransform matrix into webGL to be used by the vertex shader
+    //var invTranspose = mat4.clone(modelTransform);
+    //mat4.transpose(invTranspose, invTranspose);
+    //mat4.invert(invTranspose, invTranspose);
+    gl.uniformMatrix3fv(this.mNormalTransform, false, tbn);
 };
 
 /**
