@@ -11,9 +11,10 @@
 
 "use strict";  // Operate in Strict mode such that variables must be declared before used!
 
-function WinScreen() {
-    this.kUIButton = "assets/UI/button.png";
+function WinScreen(levelName="Level1") {
+    this.kUIButton = "assets/cloud.png";
     this.kBackground = "assets/balloon_valhalla.png";
+    this.kLevelName = levelName;
     
     // The camera to view the scene
     this.mCamera = null;
@@ -36,7 +37,7 @@ WinScreen.prototype.unloadScene = function () {
     gEngine.Textures.unloadTexture(this.kBackground);
     
     if(this.LevelSelect==="Play"){
-        gEngine.Core.startScene(new MazeLevel());
+        gEngine.Core.startScene(new MazeLevel(this.kLevelName));
     } else {
         gEngine.Core.startScene(new MyGame());
     }
@@ -53,9 +54,9 @@ WinScreen.prototype.initialize = function () {
             // sets the background to gray
     gEngine.DefaultResources.setGlobalAmbientIntensity(3);
     
-    this.PlayButton = new UIButton(this.kUIButton,this.playSelect,this,[400,400],[600,100],"Play Again",8,[1,1,1,1],[0,0,0,1]);
+    this.PlayButton = new UIButton(this.kUIButton,this.playSelect,this,[400,400],[600,100],"Play Again",8,[0.6,0.5,0,1],[0,0,0,1]);
     
-    this.QuitButton = new UIButton(this.kUIButton,this.quitSelect,this,[400,200],[600,100],"Quit",8,[1,1,1,1],[0,0,0,1]);
+    this.QuitButton = new UIButton(this.kUIButton,this.quitSelect,this,[400,200],[600,100],"Quit",8,[0.6,0.5,0,1],[0,0,0,1]);
     
     this.UIBackground = new TextureRenderable(this.kBackground);
     this.UIBackground.getXform().setXPos(this.mCamera.getWCCenter()[0]);

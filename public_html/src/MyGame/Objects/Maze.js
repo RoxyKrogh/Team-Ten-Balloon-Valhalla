@@ -81,9 +81,8 @@ Maze.prototype.pickupKeys = function (gameobj) {
     var i;
     var wcCoord = [];
     for (i = 0; i < this.mKeys.mSet.length; i++) {
-        if (gameobj.pixelTouches(this.mKeys.mSet[i], wcCoord)) {
+        if (!this.mKeys.mSet[i].isPickedUp && gameobj.pixelTouches(this.mKeys.mSet[i], wcCoord)) {
             this.mKeys.mSet[i].pickup();
-            this.mKeys.mSet.splice(i--, 1);
         }
     }
 };
@@ -126,6 +125,8 @@ Maze.prototype.createBounds = function (pixelTexture, hazardTex, gateTex, keyTex
         var key = new Key(keyTex,
                               tx + ((x + 0.5) * ps * sx), 
                               ty - ((y + 0.5) * ps * sy));
+        maze.addLight(key.glowLight);
+                              
         maze.mKeys.addToSet(key);
         return key;
     }
@@ -168,8 +169,9 @@ Maze.prototype.createBounds = function (pixelTexture, hazardTex, gateTex, keyTex
                         spikeAtPixel(this, x, texInfo.mHeight - y - 1, -Math.floor(r / (255 / 4)));
                     }
                     if (g > 0 && r === 0 && b === 0) {
-                        console.log("Creating gate " + g + " at " + x + "," + y );
-                        gates[g] = gateAtPixel(this, x, texInfo.mHeight - y - 1, -Math.floor(g / (255 / 4)));
+                        var dir =  -Math.floor(g / (255 / 4));
+                        console.log("Creating gate " + g + " at " + x + "," + y + " with direction " + dir + "(" + g + ")");
+                        gates[g] = gateAtPixel(this, x, texInfo.mHeight - y - 1,dir);
                     }
                     if (b > 0 && r === 0 && g === 0) {
                         console.log("Creating key " + b + " at " + x + "," + y );

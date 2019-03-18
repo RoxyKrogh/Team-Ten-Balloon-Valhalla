@@ -12,7 +12,7 @@
 "use strict";  // Operate in Strict mode such that variables must be declared before used!
 
 function MyGame() {
-    this.kUIButton = "assets/UI/button.png";
+    this.kUIButton = "assets/cloud.png";
     this.kBackground = "assets/balloon_valhalla.png";
     
     // The camera to view the scene
@@ -35,7 +35,7 @@ MyGame.prototype.unloadScene = function () {
     gEngine.Textures.unloadTexture(this.kBackground);
     
     if(this.LevelSelect==="Play"){
-        gEngine.Core.startScene(new MazeLevel());
+        gEngine.Core.startScene(new LevelSelect());
     } else {
         gEngine.Core.startScene(new MyGame());
     }
@@ -52,7 +52,7 @@ MyGame.prototype.initialize = function () {
             // sets the background to gray
     gEngine.DefaultResources.setGlobalAmbientIntensity(3);
     
-    this.PlayButton = new UIButton(this.kUIButton,this.particleSelect,this,[500,80],[600,100],"Play",8,[1,1,1,1],[0,0,0,1]);
+    this.PlayButton = new UIButton(this.kUIButton,this.particleSelect,this,[500,80],[600,100],"Play",8,[0.6,0.5,0,1],[0,0,0,1]);
     
     this.UIBackground = new TextureRenderable(this.kBackground);
     this.UIBackground.getXform().setXPos(this.mCamera.getWCCenter()[0]);

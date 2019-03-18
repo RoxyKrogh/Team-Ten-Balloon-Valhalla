@@ -26,8 +26,15 @@ Camera.prototype.fakeZInPixelSpace = function (z) {
  */
 Camera.prototype.wcPosToPixel = function (p) {
     // Convert the position to pixel space
-    var x = this.mViewport[Camera.eViewport.eOrgX] + ((p[0] - this.mRenderCache.mCameraOrgX) * this.mRenderCache.mWCToPixelRatio) + 0.5;
-    var y = this.mViewport[Camera.eViewport.eOrgY] + ((p[1] - this.mRenderCache.mCameraOrgY) * this.mRenderCache.mWCToPixelRatio) + 0.5;
+    var relp = [0,0];
+    vec2.subtract(relp, p, this.getWCCenter());
+    var rotmat = mat3.create();
+    mat3.identity(rotmat);
+    mat3.rotate(rotmat, rotmat, -this.mRotation);
+    vec2.transformMat3(relp, relp, rotmat);
+    vec2.add(relp, relp, this.getWCCenter());
+    var x = this.mViewport[Camera.eViewport.eOrgX] + ((relp[0] - this.mRenderCache.mCameraOrgX) * this.mRenderCache.mWCToPixelRatio) + 0.5;
+    var y = this.mViewport[Camera.eViewport.eOrgY] + ((relp[1] - this.mRenderCache.mCameraOrgY) * this.mRenderCache.mWCToPixelRatio) + 0.5;
     var z = this.fakeZInPixelSpace(p[2]);
     return vec3.fromValues(x, y, z);
 };
