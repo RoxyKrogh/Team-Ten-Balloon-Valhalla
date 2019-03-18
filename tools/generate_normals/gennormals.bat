@@ -1,0 +1,1 @@
+java -jar NormalGenerator.jar maze_pixels.png
